@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>開運方位探し | ゆうきの扉</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<style>
+  :root {
+    --bg: #39833C;
+    --bg2: #2A6330;
+    --card: #EDEFB5;
+    --ink: #33402a;
+    --gold: #f0d48a;
+    --gold-strong: #8a6b1f;
+    --accent: #2e5d33;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    color: #f3f5dc;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  header { text-align: center; padding: 18px 0 10px; }
+  header .brand { font-size: 17px; letter-spacing: 3px; color: var(--gold); }
+  header h1 { font-size: 32px; margin-top: 8px; letter-spacing: 2px; }
+  header .sub { font-size: 12px; margin-top: 6px; color: #dfe6bf; }
+
+  .notice {
+    background: rgba(240,212,138,0.16);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 16px 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.9;
+    color: var(--gold);
+  }
+  .intro {
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(240,212,138,0.5);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.9;
+    margin: 14px 0 20px;
+  }
+  .intro b { color: var(--gold); }
+
+  .panel {
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .panel h2 {
+    font-size: 15px;
+    color: var(--gold-strong);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h3.who {
+    font-size: 13px; margin: 4px 0 10px;
+    border-left: 4px solid #8aa53f; padding-left: 8px;
+  }
+  .field { margin-bottom: 12px; position: relative; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field .hint { font-weight: normal; font-size: 11px; color: #7d8263; }
+  .field input {
+    width: 100%;
+    font-size: 18px;
+    padding: 12px 14px;
+    border: 1.5px solid #c5c98d;
+    border-radius: 10px;
+    background: #fbfce9;
+  }
+  .field input:focus { outline: 2px solid #8aa53f; border-color: #8aa53f; }
+  .zip-echo { font-size: 12.5px; color: #4c6b2f; margin-top: 5px; min-height: 1em; font-weight: 600; }
+  ul.cand-list {
+    display: none;
+    list-style: none;
+    position: absolute; left: 0; right: 0; top: 100%;
+    z-index: 1200;
+    background: #fffef2;
+    border: 1.5px solid #8aa53f;
+    border-radius: 10px;
+    margin-top: 4px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  }
+  ul.cand-list li {
+    padding: 10px 12px; font-size: 13.5px; cursor: pointer;
+    border-bottom: 1px solid #e6e8c2;
+  }
+  ul.cand-list li:last-child { border-bottom: none; }
+  ul.cand-list li:hover { background: #eef2cf; }
+  .divider { border-top: 1.5px dashed #c5c98d; margin: 16px 0 14px; }
+
+  .mode-tabs { display: flex; gap: 8px; margin: 4px 0 14px; }
+  .mode-tab {
+    flex: 1; padding: 11px 6px;
+    border: 1.5px solid #c5c98d; border-radius: 10px;
+    background: #fbfce9; color: #7d8263;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .mode-tab.active { background: #2e5d33; border-color: #2e5d33; color: #fff; }
+
+  .choice-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .dir-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .dist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+  .choice {
+    padding: 11px 4px;
+    border: 1.5px solid #c5c98d; border-radius: 10px;
+    background: #fbfce9; color: #55603f;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    text-align: center;
+  }
+  .choice small { display: block; font-size: 10.5px; font-weight: 600; color: #8a8f6a; margin-top: 2px; }
+  .choice.active { background: #8a6b1f; border-color: #8a6b1f; color: #fff; }
+  .choice.active small { color: #f0e2b8; }
+
+  button.go {
+    width: 100%;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #55803a 0%, #2e5d33 100%);
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button.go:active { transform: translateY(1px); }
+  .error {
+    display: none;
+    margin-top: 12px;
+    background: #fdecea; color: #8a2a20;
+    border-radius: 10px; padding: 10px 12px; font-size: 13px;
+  }
+
+  #result { display: none; margin-top: 26px; }
+  .result-card {
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .result-card .lead { font-size: 17px; font-weight: 700; color: #4c5238; }
+  .result-card .direction {
+    font-size: 48px; font-weight: 800; letter-spacing: 6px;
+    color: var(--gold-strong); margin: 8px 0 4px;
+  }
+  .result-card .dist { font-size: 20px; font-weight: 700; color: #4c5238; }
+  .result-card .route {
+    margin-top: 12px; font-size: 12.5px; line-height: 1.8; color: #4c5238;
+    border-top: 1px dashed #c5c98d; padding-top: 10px;
+  }
+  .drag-hint { margin-top: 8px; font-size: 11.5px; color: #83885f; }
+  .boundary-note {
+    display: none;
+    margin-top: 10px; font-size: 12px;
+    background: #fff6df; color: #7a5b12;
+    border-radius: 10px; padding: 8px 10px; text-align: left;
+  }
+  .map-tools { display: flex; justify-content: flex-end; margin-top: 12px; }
+  button.fit-btn {
+    border: 1.5px solid rgba(240,212,138,0.7);
+    background: rgba(255,255,255,0.12);
+    color: #f3f5dc;
+    font-size: 13px; font-weight: 700;
+    padding: 8px 14px; border-radius: 10px; cursor: pointer;
+  }
+  #map {
+    height: 380px;
+    border-radius: 16px;
+    margin-top: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  /* 地図の色味は仮（コンセプトカラー決定後に本設定・ベクター地図で完全カスタム予定） */
+  #map .leaflet-tile { filter: grayscale(35%) sepia(12%) brightness(96%); }
+  .dot-marker { cursor: grab; }
+  .outro {
+    margin-top: 22px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(240,212,138,0.5);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px; line-height: 1.9;
+  }
+  .outro a { color: var(--gold); font-weight: 700; }
+  footer { text-align: center; font-size: 11px; color: #bcd3ab; margin-top: 30px; line-height: 1.9; }
+  footer a { color: var(--gold); font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">✦ ゆうきの扉 ✦</div>
+    <h1>開運方位探し</h1>
+    <div class="sub">おうちから見て、目的地はどの方位？</div>
+  </header>
+
+  <div class="notice">
+    🎁 ただいま公開記念につき、<br>どなたでもお使いいただけます。<br>今後はメンバーシップ特典になります。
+  </div>
+
+  <div class="intro">
+    <b>開運方位探しについて</b><br>
+    ゆうきの扉は「<b>何時に、どの方位へ向かうか</b>」で運気を上げる占いです。旅行やお引っ越しなら「<b>どの日に、どの方位か</b>」。<br>
+    このページでは、その土台になる「<b>おうちから見てどの方位か</b>」を調べられます。とびらがひらく日・時間は「今週の扉」「先読みの扉」でどうぞ。
+  </div>
+
+  <div class="panel">
+    <h2>🚪 方位を調べる</h2>
+
+    <h3 class="who">🏠 おうち</h3>
+    <div class="field">
+      <label>郵便番号 <span class="hint">（次回から自動で入ります）</span></label>
+      <input id="homeZip" type="text" inputmode="numeric" placeholder="例: 100-0005" autocomplete="postal-code">
+      <div class="zip-echo" id="homeZipEcho"></div>
+    </div>
+    <div class="field">
+      <label>住所・地名 <span class="hint">（任意・入れるとより正確。候補から選べます）</span></label>
+      <input id="homeAddr" type="text" placeholder="例: 千代田区丸の内1丁目" autocomplete="off">
+      <ul class="cand-list" id="homeAddrList"></ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="mode-tabs">
+      <button type="button" class="mode-tab active" id="tabDest">📍 目的地を調べる</button>
+      <button type="button" class="mode-tab" id="tabHoui">🧭 方位から探す</button>
+    </div>
+
+    <div id="destBlock">
+      <div class="field">
+        <label>目的地の郵便番号</label>
+        <input id="destZip" type="text" inputmode="numeric" placeholder="例: 060-0001">
+        <div class="zip-echo" id="destZipEcho"></div>
+      </div>
+      <div class="field">
+        <label>目的地の住所・地名 <span class="hint">（任意・県名や市名から入れると確実）</span></label>
+        <input id="destAddr" type="text" placeholder="例: 長野県軽井沢町" autocomplete="off">
+        <ul class="cand-list" id="destAddrList"></ul>
+      </div>
+    </div>
+
+    <div id="houiBlock" style="display:none">
+      <div class="choice-label">方位を選ぶ</div>
+      <div class="dir-grid" id="dirGrid"></div>
+      <div class="choice-label">距離を選ぶ</div>
+      <div class="dist-grid" id="distGrid"></div>
+    </div>
+
+    <button class="go" id="goBtn">とびらをひらく</button>
+    <div class="error" id="errBox"></div>
+  </div>
+
+  <div id="result">
+    <div class="result-card">
+      <div class="lead" id="leadText">目的地は、おうちから見て</div>
+      <div class="direction" id="dirName">──</div>
+      <div class="dist" id="distText"></div>
+      <div class="boundary-note" id="boundaryNote">
+        ⚠ 方位の境目にかなり近い結果です。住所を丁目まで入れるか、地図の丸を正確な場所へ動かして、もう一度お確かめください。
+      </div>
+      <div class="route" id="routeText"></div>
+      <div class="drag-hint">地図の丸（🏠おうち・📍目的地）はドラッグで動かせます。動かすと方位と距離がすぐ計算し直されます。</div>
+    </div>
+    <div class="map-tools">
+      <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示にもどす</button>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <div class="outro">
+    この方位の<b>とびらがひらく日・時間</b>は、メンバーシップの<br>
+    「<a href="https://note.com/youyou55/membership">今週の扉</a>」「<a href="https://note.com/youyou55/membership">先読みの扉</a>」でご案内しています。
+  </div>
+
+  <footer>
+    方位は真北基準・8方位（45度）で判定しています。<br>
+    入力した郵便番号・住所が、このページの外に送られて保存されることはありません。<br>
+    おうち欄の記憶は、あなたのスマホ（ブラウザ）の中だけに保存されます。<br>
+    （場所しらべには国土地理院などの公的な無料サービスを利用しています）<br>
+    © <a href="https://note.com/youyou55">ゆうきの扉</a>
+  </footer>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<!-- 市町村コード表（国土地理院公式・自治体合併で内容が更新されるためSRI固定はしない。GSI名前空間が先に必要） -->
+<script>window.GSI = window.GSI || {};</script>
+<script src="https://maps.gsi.go.jp/js/muni.js" defer></script>
+<script>
+const DIRS = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
+const DISTS = [ { label: "近距離", km: 20 }, { label: "中距離", km: 50 }, { label: "長距離", km: 100 } ];
+const R_EARTH = 6371.0088; // km
+const toRad = d => d * Math.PI / 180;
+const toDeg = r => r * 180 / Math.PI;
+
+function bearing(lat1, lon1, lat2, lon2) {
+  const p1 = toRad(lat1), p2 = toRad(lat2), dl = toRad(lon2 - lon1);
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const p1 = toRad(lat1), p2 = toRad(lat2);
+  const dp = toRad(lat2 - lat1), dl = toRad(lon2 - lon1);
+  const a = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return R_EARTH * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// 出発点から方位角θ・距離dkmの地点（球面三角法）
+function destPoint(lat, lon, brgDeg, dkm) {
+  const δ = dkm / R_EARTH, θ = toRad(brgDeg);
+  const p1 = toRad(lat), l1 = toRad(lon);
+  const p2 = Math.asin(Math.sin(p1)*Math.cos(δ) + Math.cos(p1)*Math.sin(δ)*Math.cos(θ));
+  const l2 = l1 + Math.atan2(Math.sin(θ)*Math.sin(δ)*Math.cos(p1), Math.cos(δ) - Math.sin(p1)*Math.sin(p2));
+  return [toDeg(p2), toDeg(l2)];
+}
+function dirIndex(brg) { return Math.floor(((brg + 22.5) % 360) / 45); }
+function distToBoundary(brg) {
+  const m = ((brg + 22.5) % 45);
+  return Math.min(m, 45 - m); // 境界までの角度差
+}
+
+// 郵便番号 → 住所（zipcloud・JSONP）
+function zipLookup(zip) {
+  return new Promise((resolve, reject) => {
+    const cb = "zipcb_" + Math.random().toString(36).slice(2);
+    window[cb] = data => {
+      delete window[cb]; script.remove();
+      if (data.status !== 200 || !data.results) reject(new Error("郵便番号が見つかりませんでした: " + zip));
+      else resolve(data.results[0]);
+    };
+    const script = document.createElement("script");
+    script.src = "https://zipcloud.ibsnet.co.jp/api/search?zipcode=" + encodeURIComponent(zip) + "&callback=" + cb;
+    script.onerror = () => { delete window[cb]; script.remove(); reject(new Error("郵便番号の検索に失敗しました")); };
+    document.body.appendChild(script);
+  });
+}
+// 住所 → 緯度経度の候補一覧（国土地理院）
+async function geocodeList(addr) {
+  const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(addr));
+  if (!res.ok) throw new Error("住所の検索に失敗しました");
+  return await res.json();
+}
+async function geocode(addr) {
+  const list = await geocodeList(addr);
+  if (!list.length) throw new Error("住所が見つかりませんでした: " + addr);
+  const [lon, lat] = list[0].geometry.coordinates;
+  return { lat, lon, title: list[0].properties.title };
+}
+// 緯度経度 → おおよその地名（国土地理院の逆引き＋市町村コード表）
+async function reverseGeocode(lat, lon) {
+  const res = await fetch("https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=" + lat + "&lon=" + lon);
+  if (!res.ok) return "";
+  const j = await res.json();
+  const r = j && j.results;
+  if (!r) return "";
+  let muni = "";
+  if (window.GSI && GSI.MUNI_ARRAY && r.muniCd) {
+    const e = GSI.MUNI_ARRAY[String(parseInt(r.muniCd, 10))];
+    if (e) { const parts = e.split(","); muni = parts[1] + parts[3]; }
+  }
+  const lv = (r.lv01Nm && r.lv01Nm !== "－") ? r.lv01Nm : "";
+  return muni + lv;
+}
+
+// 住所・地名欄の候補選択（選ばれたらここに保存）
+const addrPick = { home: null, dest: null };
+
+async function resolvePoint(key, zip, addrText) {
+  if (addrText && addrText.trim()) {
+    const picked = addrPick[key];
+    if (picked && picked.input === addrText.trim()) {
+      return { lat: picked.lat, lon: picked.lon, label: picked.title };
+    }
+    const g = await geocode(addrText.trim());
+    return { lat: g.lat, lon: g.lon, label: g.title + "（検索: " + addrText.trim() + "）" };
+  }
+  const z = zip.replace(/[^0-9]/g, "");
+  if (!/^\d{7}$/.test(z)) throw new Error("郵便番号は7桁の数字で入れてください（例: 100-0005）。地名で調べたいときは「住所・地名」欄へどうぞ");
+  const a = await zipLookup(z);
+  const full = a.address1 + a.address2 + a.address3;
+  const g = await geocode(full);
+  return { lat: g.lat, lon: g.lon, label: full };
+}
+
+let map = null, layerGroup = null, homeMarker = null, destMarker = null;
+let state = null; // { mode, home:{lat,lon,label,moved}, dest:{...} }
+let currentMode = "dest"; // "dest" | "houi"
+let chosenDirIdx = null, chosenDistKm = DISTS[0].km;
+
+function dotIcon(color) {
+  return L.divIcon({
+    className: "dot-marker",
+    html: '<div style="width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid ' + color + ';box-shadow:0 1px 5px rgba(0,0,0,0.45)"></div>',
+    iconSize: [20, 20], iconAnchor: [10, 10]
+  });
+}
+
+function updateResultCard() {
+  const { home, dest } = state;
+  const brg = bearing(home.lat, home.lon, dest.lat, dest.lon);
+  const dist = distanceKm(home.lat, home.lon, dest.lat, dest.lon);
+  document.getElementById("leadText").textContent =
+    state.mode === "houi" ? "お出かけ先の目安は、おうちから見て" : "目的地は、おうちから見て";
+  document.getElementById("dirName").textContent = DIRS[dirIndex(brg)];
+  document.getElementById("distText").textContent = "距離 約" + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + "km";
+  const fmt = p => p.moved ? ((p.dragLabel || p.label) + "（地図で調整）") : p.label;
+  document.getElementById("routeText").innerHTML = "🏠 " + fmt(home) + "<br>↓<br>📍 " + fmt(dest);
+  document.getElementById("boundaryNote").style.display =
+    (state.mode !== "houi" && distToBoundary(brg) < 3) ? "block" : "none";
+  return { brg, dist };
+}
+
+function redrawLines(fit) {
+  const { home, dest } = state;
+  const { brg, dist } = updateResultCard();
+  layerGroup.clearLayers();
+
+  const R = Math.min(Math.max(dist * 1.4, 60), 2500);
+  const idx = dirIndex(brg);
+
+  // 8方位の境界線。該当方位の両端だけ金色の実線、他は緑の破線
+  for (let i = 0; i < 8; i++) {
+    const b = 22.5 + i * 45;
+    const isEdge = (i === idx) || (i === (idx + 7) % 8);
+    const pts = [];
+    for (let d = 0; d <= R; d += R / 40) pts.push(destPoint(home.lat, home.lon, b, d));
+    L.polyline(pts, isEdge
+      ? { color: "#b8860b", weight: 3.5, opacity: 0.95 }
+      : { color: "#1f4a24", weight: 2.6, opacity: 0.95, dashArray: "7 6" }
+    ).addTo(layerGroup);
+  }
+
+  // 自宅→目的地の線
+  const line = [];
+  for (let d = 0; d <= dist; d += Math.max(dist / 40, 0.5)) line.push(destPoint(home.lat, home.lon, brg, d));
+  line.push([dest.lat, dest.lon]);
+  L.polyline(line, { color: "#e05a3a", weight: 3.5, opacity: 0.95 }).addTo(layerGroup);
+
+  if (fit) fitWhole();
+  setTimeout(() => map.invalidateSize(), 60);
+}
+
+function fitWhole() {
+  if (!map || !state) return;
+  map.fitBounds(L.latLngBounds([[state.home.lat, state.home.lon], [state.dest.lat, state.dest.lon]]).pad(0.35));
+}
+
+async function afterDrag(key, marker) {
+  const p = marker.getLatLng();
+  const s = state[key];
+  s.lat = p.lat; s.lon = p.lng; s.moved = true; s.dragLabel = null;
+  redrawLines(false);
+  const my = s.rgSeq = (s.rgSeq || 0) + 1;
+  try {
+    const name = await reverseGeocode(p.lat, p.lng);
+    if (state[key] === s && s.rgSeq === my && name) { s.dragLabel = name; updateResultCard(); }
+  } catch (e) { /* 逆引きできないときは（地図で調整）のまま */ }
+}
+
+function drawMap() {
+  const el = document.getElementById("map");
+  if (!map) {
+    map = L.map(el, { zoomControl: true });
+    // 地図は標準（OpenStreetMap）に固定。配色はコンセプトカラー決定後に本設定（ベクター地図で完全カスタム予定）
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 18
+    }).addTo(map);
+    layerGroup = L.layerGroup().addTo(map);
+
+    homeMarker = L.marker([0, 0], { icon: dotIcon("#2e5d33"), draggable: true, zIndexOffset: 1000 })
+      .addTo(map).bindTooltip("🏠 おうち（ドラッグOK）");
+    destMarker = L.marker([0, 0], { icon: dotIcon("#a9412f"), draggable: true, zIndexOffset: 1000 })
+      .addTo(map).bindTooltip("📍 目的地（ドラッグOK）");
+    homeMarker.on("dragend", () => afterDrag("home", homeMarker));
+    destMarker.on("dragend", () => afterDrag("dest", destMarker));
+  }
+  homeMarker.setLatLng([state.home.lat, state.home.lon]);
+  destMarker.setLatLng([state.dest.lat, state.dest.lon]);
+  redrawLines(true);
+}
+
+async function run() {
+  const err = document.getElementById("errBox");
+  const btn = document.getElementById("goBtn");
+  err.style.display = "none";
+  btn.disabled = true; btn.textContent = "調べています…";
+  try {
+    const homeZip = document.getElementById("homeZip").value;
+    const homeAddr = document.getElementById("homeAddr").value;
+    if (!homeZip.trim() && !homeAddr.trim()) throw new Error("おうちの郵便番号か住所を入れてください");
+    const home = await resolvePoint("home", homeZip, homeAddr);
+
+    let dest;
+    if (currentMode === "houi") {
+      if (chosenDirIdx === null) throw new Error("方位を選んでください");
+      const [dlat, dlon] = destPoint(home.lat, home.lon, chosenDirIdx * 45, chosenDistKm);
+      let areaName = "";
+      try { areaName = await reverseGeocode(dlat, dlon); } catch (e) {}
+      dest = {
+        lat: dlat, lon: dlon,
+        label: (areaName ? areaName + " のあたり" : DIRS[chosenDirIdx] + "へ約" + chosenDistKm + "km の地点")
+               + "（このへんで行き先を探してみましょう）"
+      };
+    } else {
+      const destZip = document.getElementById("destZip").value;
+      const destAddr = document.getElementById("destAddr").value;
+      if (!destZip.trim() && !destAddr.trim()) throw new Error("目的地の郵便番号か住所を入れてください");
+      dest = await resolvePoint("dest", destZip, destAddr);
+      const dist = distanceKm(home.lat, home.lon, dest.lat, dest.lon);
+      if (dist < 0.3) throw new Error("おうちと目的地がほぼ同じ場所です。入力を確かめてください");
+    }
+
+    state = { mode: currentMode, home: { ...home, moved: false }, dest: { ...dest, moved: false } };
+    document.getElementById("result").style.display = "block";
+    drawMap();
+    localStorage.setItem("yuki_home_zip", homeZip);
+    localStorage.setItem("yuki_home_addr", homeAddr);
+    document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    err.textContent = "⚠ " + e.message;
+    err.style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = "とびらをひらく";
+  }
+}
+
+// 郵便番号: 7桁そろったら下に住所を表示
+function setupZipEcho(zipId, echoId) {
+  const inp = document.getElementById(zipId), echo = document.getElementById(echoId);
+  let seq = 0;
+  inp.addEventListener("input", async () => {
+    const my = ++seq;
+    const z = inp.value.replace(/[^0-9]/g, "");
+    if (z.length !== 7) { echo.textContent = ""; return; }
+    echo.textContent = "…調べています";
+    try {
+      const a = await zipLookup(z);
+      if (my === seq) echo.textContent = "→ " + a.address1 + a.address2 + a.address3;
+    } catch (e) {
+      if (my === seq) echo.textContent = "→ この郵便番号は見つかりませんでした";
+    }
+  });
+}
+// 住所・地名: 入力すると候補を表示して選べる
+function setupAddrCandidates(addrId, listId, key) {
+  const inp = document.getElementById(addrId), list = document.getElementById(listId);
+  let timer = null;
+  inp.addEventListener("input", () => {
+    addrPick[key] = null;
+    clearTimeout(timer);
+    const q = inp.value.trim();
+    if (q.length < 2) { list.style.display = "none"; list.innerHTML = ""; return; }
+    timer = setTimeout(async () => {
+      try {
+        const arr = await geocodeList(q);
+        list.innerHTML = "";
+        arr.slice(0, 8).forEach(c => {
+          const li = document.createElement("li");
+          li.textContent = c.properties.title;
+          li.addEventListener("click", () => {
+            const [lon, lat] = c.geometry.coordinates;
+            inp.value = c.properties.title;
+            addrPick[key] = { lat, lon, title: c.properties.title, input: c.properties.title };
+            list.style.display = "none"; list.innerHTML = "";
+          });
+          list.appendChild(li);
+        });
+        list.style.display = arr.length ? "block" : "none";
+      } catch (e) { /* 候補が出せないだけなので黙って続行 */ }
+    }, 400);
+  });
+  inp.addEventListener("blur", () => setTimeout(() => { list.style.display = "none"; }, 250));
+}
+
+// モード切り替えと選択ボタン
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById("tabDest").classList.toggle("active", mode === "dest");
+  document.getElementById("tabHoui").classList.toggle("active", mode === "houi");
+  document.getElementById("destBlock").style.display = mode === "dest" ? "block" : "none";
+  document.getElementById("houiBlock").style.display = mode === "houi" ? "block" : "none";
+}
+function buildChoices() {
+  const dirGrid = document.getElementById("dirGrid");
+  DIRS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "choice"; b.textContent = d;
+    b.addEventListener("click", () => {
+      chosenDirIdx = i;
+      dirGrid.querySelectorAll(".choice").forEach((x, j) => x.classList.toggle("active", j === i));
+    });
+    dirGrid.appendChild(b);
+  });
+  const distGrid = document.getElementById("distGrid");
+  DISTS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "choice" + (i === 0 ? " active" : "");
+    b.innerHTML = d.label + "<small>約" + d.km + "km</small>";
+    b.addEventListener("click", () => {
+      chosenDistKm = d.km;
+      distGrid.querySelectorAll(".choice").forEach((x, j) => x.classList.toggle("active", j === i));
+    });
+    distGrid.appendChild(b);
+  });
+}
+
+document.getElementById("goBtn").addEventListener("click", run);
+document.getElementById("fitBtn").addEventListener("click", fitWhole);
+document.getElementById("tabDest").addEventListener("click", () => setMode("dest"));
+document.getElementById("tabHoui").addEventListener("click", () => setMode("houi"));
+
+window.addEventListener("DOMContentLoaded", () => {
+  buildChoices();
+  setupZipEcho("homeZip", "homeZipEcho");
+  setupZipEcho("destZip", "destZipEcho");
+  setupAddrCandidates("homeAddr", "homeAddrList", "home");
+  setupAddrCandidates("destAddr", "destAddrList", "dest");
+  const z = localStorage.getItem("yuki_home_zip");
+  const a = localStorage.getItem("yuki_home_addr");
+  if (z) { document.getElementById("homeZip").value = z; document.getElementById("homeZip").dispatchEvent(new Event("input")); }
+  if (a) document.getElementById("homeAddr").value = a;
+});
+</script>
+</body>
+</html>
