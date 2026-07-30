@@ -173,7 +173,7 @@
     background: #fff6df; color: #7a5b12;
     border-radius: 10px; padding: 8px 10px; text-align: left;
   }
-  .map-tools { display: flex; justify-content: flex-end; margin-top: 12px; }
+  .map-tools { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
   button.fit-btn {
     border: 1.5px solid rgba(240,212,138,0.7);
     background: rgba(255,255,255,0.12);
@@ -181,6 +181,8 @@
     font-size: 13px; font-weight: 700;
     padding: 8px 14px; border-radius: 10px; cursor: pointer;
   }
+  button.fit-btn.on { background: var(--gold); color: #33402a; border-color: var(--gold); }
+  .map-note { font-size: 11.5px; color: #dfe6bf; margin-top: 8px; line-height: 1.8; text-align: center; }
   #map {
     height: 380px;
     border-radius: 16px;
@@ -189,7 +191,8 @@
   }
   /* 地図の色味は仮（コンセプトカラー決定後に本設定・ベクター地図で完全カスタム予定） */
   #map .leaflet-tile { filter: grayscale(35%) sepia(12%) brightness(96%); }
-  .dot-marker { cursor: grab; }
+  /* 丸は1本指でつまんで動かせるようにする（ページのスクロールに取られないため） */
+  .dot-marker { cursor: grab; touch-action: none; }
   .outro {
     margin-top: 22px;
     background: rgba(255,255,255,0.10);
@@ -277,12 +280,17 @@
         ⚠ 方位の境目にかなり近い結果です。住所を丁目まで入れるか、地図の丸を正確な場所へ動かして、もう一度お確かめください。
       </div>
       <div class="route" id="routeText"></div>
-      <div class="drag-hint">地図の丸（🏠おうち・📍目的地）はドラッグで動かせます。動かすと方位と距離がすぐ計算し直されます。</div>
+      <div class="drag-hint">地図の丸（🏠おうち・📍目的地）は指でつまんで動かせます。動かすと方位と距離がすぐ計算し直されます。</div>
     </div>
     <div class="map-tools">
+      <button type="button" class="fit-btn" id="lockBtn">🔓 地図を動かす</button>
       <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示にもどす</button>
     </div>
     <div id="map"></div>
+    <div class="map-note" id="mapNote">
+      地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>
+      1本で動かしたいときは「地図を動かす」を押してください。
+    </div>
   </div>
 
   <div class="outro">
@@ -462,6 +470,23 @@ function fitWhole() {
   map.fitBounds(L.latLngBounds([[state.home.lat, state.home.lon], [state.dest.lat, state.dest.lon]]).pad(0.35));
 }
 
+// 地図のスクロール対策: 既定は「固定」。1本指ではページが動き、指2本で地図を動かせる（Googleマップ方式）
+// ボタンを押すと1本指でも地図を動かせる。⚠丸（おうち・目的地）のドラッグは固定中でも使える
+let mapLocked = true;
+function applyMapLock() {
+  const btn = document.getElementById("lockBtn");
+  const note = document.getElementById("mapNote");
+  if (map) {
+    if (mapLocked) { map.dragging.disable(); map.scrollWheelZoom.disable(); }
+    else { map.dragging.enable(); map.scrollWheelZoom.enable(); }
+  }
+  btn.textContent = mapLocked ? "🔓 地図を動かす" : "🔒 地図をとめる";
+  btn.classList.toggle("on", !mapLocked);
+  note.innerHTML = mapLocked
+    ? '地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>1本で動かしたいときは「地図を動かす」を押してください。'
+    : '<b>いま地図を動かせます。</b>ページを動かしたいときは「地図をとめる」を押してください。';
+}
+
 async function afterDrag(key, marker) {
   const p = marker.getLatLng();
   const s = state[key];
@@ -490,6 +515,7 @@ function drawMap() {
       .addTo(map).bindTooltip("📍 目的地（ドラッグOK）");
     homeMarker.on("dragend", () => afterDrag("home", homeMarker));
     destMarker.on("dragend", () => afterDrag("dest", destMarker));
+    applyMapLock();
   }
   homeMarker.setLatLng([state.home.lat, state.home.lon]);
   destMarker.setLatLng([state.dest.lat, state.dest.lon]);
@@ -623,6 +649,7 @@ function buildChoices() {
 
 document.getElementById("goBtn").addEventListener("click", run);
 document.getElementById("fitBtn").addEventListener("click", fitWhole);
+document.getElementById("lockBtn").addEventListener("click", () => { mapLocked = !mapLocked; applyMapLock(); });
 document.getElementById("tabDest").addEventListener("click", () => setMode("dest"));
 document.getElementById("tabHoui").addEventListener("click", () => setMode("houi"));
 
