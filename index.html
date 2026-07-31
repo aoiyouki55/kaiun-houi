@@ -72,7 +72,15 @@
   }
   .field { margin-bottom: 12px; position: relative; }
   .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-  .field .hint { font-weight: normal; font-size: 11px; color: #7d8263; }
+  .field .hint { font-weight: normal; font-size: 12.5px; color: #6f7554; }
+  /* 「任意」を目立たせるバッジ（入れなくても使えることが一目で分かるように） */
+  .opt {
+    display: inline-block;
+    background: #8a6b1f; color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px;
+    margin: 0 6px; vertical-align: 1px;
+  }
   .field input {
     width: 100%;
     font-size: 18px;
@@ -226,25 +234,26 @@
   </div>
 
   <div class="panel">
-    <h2>🚪 方位を調べる</h2>
+    <h2>🏠 出発地点を登録</h2>
 
-    <h3 class="who">🏠 おうち</h3>
     <div class="field">
       <label>郵便番号 <span class="hint">（次回から自動で入ります）</span></label>
       <input id="homeZip" type="text" inputmode="numeric" placeholder="例: 100-0005" autocomplete="postal-code">
       <div class="zip-echo" id="homeZipEcho"></div>
     </div>
     <div class="field">
-      <label>住所・地名 <span class="hint">（任意・入れるとより正確。候補から選べます）</span></label>
+      <label>住所・地名 <span class="opt">任意</span><span class="hint">入れるとより正確。候補から選べます</span></label>
       <input id="homeAddr" type="text" placeholder="例: 千代田区丸の内1丁目" autocomplete="off">
       <ul class="cand-list" id="homeAddrList"></ul>
     </div>
 
     <div class="divider"></div>
 
+    <h2>🧭 方位を調べる</h2>
+
     <div class="mode-tabs">
-      <button type="button" class="mode-tab active" id="tabDest">📍 目的地を調べる</button>
-      <button type="button" class="mode-tab" id="tabHoui">🧭 方位から探す</button>
+      <button type="button" class="mode-tab active" id="tabDest">目的地から調べる</button>
+      <button type="button" class="mode-tab" id="tabHoui">方位から調べる</button>
     </div>
 
     <div id="destBlock">
@@ -254,16 +263,16 @@
         <div class="zip-echo" id="destZipEcho"></div>
       </div>
       <div class="field">
-        <label>目的地の住所・地名 <span class="hint">（任意・県名や市名から入れると確実）</span></label>
+        <label>目的地の住所・地名 <span class="opt">任意</span><span class="hint">県名や市名から入れると確実</span></label>
         <input id="destAddr" type="text" placeholder="例: 長野県軽井沢町" autocomplete="off">
         <ul class="cand-list" id="destAddrList"></ul>
       </div>
     </div>
 
     <div id="houiBlock" style="display:none">
-      <div class="choice-label">方位を選ぶ</div>
+      <div class="choice-label">開運の方位を選んでね</div>
       <div class="dir-grid" id="dirGrid"></div>
-      <div class="choice-label">距離を選ぶ</div>
+      <div class="choice-label">毎日のお出かけは20キロ程度まで</div>
       <div class="dist-grid" id="distGrid"></div>
     </div>
 
