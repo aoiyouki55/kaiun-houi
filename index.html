@@ -325,6 +325,13 @@
   let __gmapsResolve;
   const gmapsLoaded = new Promise(r => { __gmapsResolve = r; });
   window.gmapsReady = () => __gmapsResolve();
+  // 地図が読み込めなかったとき（キーの制限・課金設定など）に知らせる
+  window.__gmAuthError = "";
+  window.gm_authFailure = () => {
+    window.__gmAuthError = "認証エラー";
+    const note = document.getElementById("mapNote");
+    if (note) note.innerHTML = "⚠ 地図をうまく読み込めませんでした。少し時間をおいて、ページを開き直してみてください。";
+  };
 </script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE&language=ja&region=JP&loading=async&callback=gmapsReady"></script>
 <!-- 市町村コード表（国土地理院公式・自治体合併で内容が更新されるためSRI固定はしない。GSI名前空間が先に必要） -->
