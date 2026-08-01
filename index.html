@@ -120,7 +120,15 @@
   }
   .mode-tab.active { background: #2e5d33; border-color: #2e5d33; color: #fff; }
 
+  .panel + .panel { margin-top: 16px; }
   .choice-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .choice-note { font-size: 12px; color: #6f7554; margin: -2px 0 8px; line-height: 1.7; }
+  /* 地図の距離の目安の円につけるラベル */
+  .km-label {
+    font-size: 10.5px; font-weight: 700; color: #2e5d33;
+    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+    white-space: nowrap; text-align: center;
+  }
   .dir-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
   .dist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
   .choice {
@@ -234,7 +242,7 @@
   </div>
 
   <div class="panel">
-    <h2>🏠 出発地点を登録</h2>
+    <h2>🏠 出発地点を登録（おうち）</h2>
 
     <div class="field">
       <label>郵便番号 <span class="hint">（次回から自動で入ります）</span></label>
@@ -246,9 +254,9 @@
       <input id="homeAddr" type="text" placeholder="例: 千代田区丸の内1丁目" autocomplete="off">
       <ul class="cand-list" id="homeAddrList"></ul>
     </div>
+  </div>
 
-    <div class="divider"></div>
-
+  <div class="panel">
     <h2>🧭 方位を調べる</h2>
 
     <div class="mode-tabs">
@@ -272,7 +280,8 @@
     <div id="houiBlock" style="display:none">
       <div class="choice-label">開運の方位を選んでね</div>
       <div class="dir-grid" id="dirGrid"></div>
-      <div class="choice-label">毎日のお出かけは20キロ程度まで</div>
+      <div class="choice-label">毎日のお出かけは5km・最大でも20km程度まで</div>
+      <div class="choice-note">20km以上は、祐気取り（開運のお出かけ）におすすめです。</div>
       <div class="dist-grid" id="distGrid"></div>
     </div>
 
@@ -322,7 +331,8 @@
 <script src="https://maps.gsi.go.jp/js/muni.js" defer></script>
 <script>
 const DIRS = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
-const DISTS = [ { label: "近距離", km: 20 }, { label: "中距離", km: 50 }, { label: "長距離", km: 100 } ];
+const DISTS = [ { label: "近距離", km: 5 }, { label: "中距離", km: 20 }, { label: "長距離", km: 50 } ];
+const RINGS = [5, 20, 50]; // 地図に描く距離の目安の円（km）
 const R_EARTH = 6371.0088; // km
 const toRad = d => d * Math.PI / 180;
 const toDeg = r => r * 180 / Math.PI;
@@ -463,6 +473,18 @@ function redrawLines(fit) {
       : { color: "#1f4a24", weight: 2.6, opacity: 0.95, dashArray: "7 6" }
     ).addTo(layerGroup);
   }
+
+  // 距離の目安の細い円（5・20・50km）
+  RINGS.forEach(km => {
+    L.circle([home.lat, home.lon], {
+      radius: km * 1000,
+      color: "#1f4a24", weight: 1.2, opacity: 0.6, fill: false, interactive: false
+    }).addTo(layerGroup);
+    L.marker(destPoint(home.lat, home.lon, 0, km), {
+      icon: L.divIcon({ className: "km-label", html: km + "km", iconSize: [36, 14], iconAnchor: [18, 7] }),
+      interactive: false
+    }).addTo(layerGroup);
+  });
 
   // 自宅→目的地の線
   const line = [];
