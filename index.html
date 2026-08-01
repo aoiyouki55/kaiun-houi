@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>開運方位探し | ゆうきの扉</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
 <style>
   :root {
     --bg: #38833c;
@@ -205,10 +204,6 @@
     margin-top: 8px;
     box-shadow: 0 6px 24px rgba(0,0,0,0.35);
   }
-  /* 地図の色味は仮（コンセプトカラー決定後に本設定・ベクター地図で完全カスタム予定） */
-  #map .leaflet-tile { filter: grayscale(35%) sepia(12%) brightness(96%); }
-  /* 丸は1本指でつまんで動かせるようにする（ページのスクロールに取られないため） */
-  .dot-marker { cursor: grab; touch-action: none; }
   .outro {
     margin-top: 22px;
     background: rgba(255,255,255,0.10);
@@ -325,7 +320,13 @@
   </footer>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<!-- Googleマップ。キーはページに埋め込む前提の公開キーで、守りはGoogle Cloud側のリファラー制限が担う -->
+<script>
+  let __gmapsResolve;
+  const gmapsLoaded = new Promise(r => { __gmapsResolve = r; });
+  window.gmapsReady = () => __gmapsResolve();
+</script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE&language=ja&region=JP&loading=async&callback=gmapsReady"></script>
 <!-- 市町村コード表（国土地理院公式・自治体合併で内容が更新されるためSRI固定はしない。GSI名前空間が先に必要） -->
 <script>window.GSI = window.GSI || {};</script>
 <script src="https://maps.gsi.go.jp/js/muni.js" defer></script>
@@ -426,18 +427,17 @@ async function resolvePoint(key, zip, addrText) {
   return { lat: g.lat, lon: g.lon, label: full };
 }
 
-let map = null, layerGroup = null, homeMarker = null, destMarker = null;
+let map = null, overlays = [], homeMarker = null, destMarker = null;
 let state = null; // { mode, home:{lat,lon,label,moved}, dest:{...} }
 let currentMode = "dest"; // "dest" | "houi"
 let chosenDirIdx = null, chosenDistKm = DISTS[0].km;
 
+const LL = (lat, lon) => ({ lat: lat, lng: lon });
 function dotIcon(color) {
-  return L.divIcon({
-    className: "dot-marker",
-    html: '<div style="width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid ' + color + ';box-shadow:0 1px 5px rgba(0,0,0,0.45)"></div>',
-    iconSize: [20, 20], iconAnchor: [10, 10]
-  });
+  return { path: google.maps.SymbolPath.CIRCLE, scale: 9,
+    fillColor: "#ffffff", fillOpacity: 1, strokeColor: color, strokeWeight: 4 };
 }
+function clearOverlays() { overlays.forEach(o => o.setMap(null)); overlays = []; }
 
 function updateResultCard() {
   const { home, dest } = state;
@@ -457,48 +457,56 @@ function updateResultCard() {
 function redrawLines(fit) {
   const { home, dest } = state;
   const { brg, dist } = updateResultCard();
-  layerGroup.clearLayers();
+  if (!map) return;
+  clearOverlays();
 
   const R = Math.min(Math.max(dist * 1.4, 60), 2500);
   const idx = dirIndex(brg);
 
-  // 8方位の境界線。該当方位の両端だけ金色の実線、他は緑の破線
+  // 8方位の境界線（geodesic=球面上の正方位線）。該当方位の両端だけ金色の実線、他は緑の破線
   for (let i = 0; i < 8; i++) {
     const b = 22.5 + i * 45;
     const isEdge = (i === idx) || (i === (idx + 7) % 8);
-    const pts = [];
-    for (let d = 0; d <= R; d += R / 40) pts.push(destPoint(home.lat, home.lon, b, d));
-    L.polyline(pts, isEdge
-      ? { color: "#b8860b", weight: 3.5, opacity: 0.95 }
-      : { color: "#1f4a24", weight: 2.6, opacity: 0.95, dashArray: "7 6" }
-    ).addTo(layerGroup);
+    const end = destPoint(home.lat, home.lon, b, R);
+    const path = [LL(home.lat, home.lon), LL(end[0], end[1])];
+    overlays.push(new google.maps.Polyline(isEdge
+      ? { path, geodesic: true, map, clickable: false,
+          strokeColor: "#b8860b", strokeOpacity: 0.95, strokeWeight: 3.5 }
+      : { path, geodesic: true, map, clickable: false, strokeOpacity: 0,
+          icons: [{ icon: { path: "M 0,-1 0,1", strokeColor: "#1f4a24", strokeOpacity: 0.95,
+                            strokeWeight: 2.6, scale: 3 }, offset: "0", repeat: "12px" }] }
+    ));
   }
 
   // 距離の目安の細い円（5・20・50km）
   RINGS.forEach(km => {
-    L.circle([home.lat, home.lon], {
-      radius: km * 1000,
-      color: "#1f4a24", weight: 1.2, opacity: 0.6, fill: false, interactive: false
-    }).addTo(layerGroup);
-    L.marker(destPoint(home.lat, home.lon, 0, km), {
-      icon: L.divIcon({ className: "km-label", html: km + "km", iconSize: [36, 14], iconAnchor: [18, 7] }),
-      interactive: false
-    }).addTo(layerGroup);
+    overlays.push(new google.maps.Circle({
+      center: LL(home.lat, home.lon), radius: km * 1000, map, clickable: false,
+      strokeColor: "#1f4a24", strokeOpacity: 0.6, strokeWeight: 1.2, fillOpacity: 0
+    }));
+    const p = destPoint(home.lat, home.lon, 0, km);
+    overlays.push(new google.maps.Marker({
+      position: LL(p[0], p[1]), map, clickable: false,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0, strokeOpacity: 0, fillOpacity: 0 },
+      label: { text: km + "km", fontSize: "11px", fontWeight: "700", color: "#1f4a24" }
+    }));
   });
 
   // 自宅→目的地の線
-  const line = [];
-  for (let d = 0; d <= dist; d += Math.max(dist / 40, 0.5)) line.push(destPoint(home.lat, home.lon, brg, d));
-  line.push([dest.lat, dest.lon]);
-  L.polyline(line, { color: "#e05a3a", weight: 3.5, opacity: 0.95 }).addTo(layerGroup);
+  overlays.push(new google.maps.Polyline({
+    path: [LL(home.lat, home.lon), LL(dest.lat, dest.lon)], geodesic: true, map, clickable: false,
+    strokeColor: "#e05a3a", strokeOpacity: 0.95, strokeWeight: 3.5
+  }));
 
   if (fit) fitWhole();
-  setTimeout(() => map.invalidateSize(), 60);
 }
 
 function fitWhole() {
   if (!map || !state) return;
-  map.fitBounds(L.latLngBounds([[state.home.lat, state.home.lon], [state.dest.lat, state.dest.lon]]).pad(0.35));
+  const b = new google.maps.LatLngBounds();
+  b.extend(LL(state.home.lat, state.home.lon));
+  b.extend(LL(state.dest.lat, state.dest.lon));
+  map.fitBounds(b, 60);
 }
 
 // 地図のスクロール対策: 既定は「固定」。1本指ではページが動き、指2本で地図を動かせる（Googleマップ方式）
@@ -507,10 +515,8 @@ let mapLocked = true;
 function applyMapLock() {
   const btn = document.getElementById("lockBtn");
   const note = document.getElementById("mapNote");
-  if (map) {
-    if (mapLocked) { map.dragging.disable(); map.scrollWheelZoom.disable(); }
-    else { map.dragging.enable(); map.scrollWheelZoom.enable(); }
-  }
+  // cooperative = 指1本でページが動き、指2本で地図が動く（Googleマップ標準の動き）
+  if (map) map.setOptions({ gestureHandling: mapLocked ? "cooperative" : "greedy" });
   btn.textContent = mapLocked ? "🔓 地図を動かす" : "🔒 地図をとめる";
   btn.classList.toggle("on", !mapLocked);
   note.innerHTML = mapLocked
@@ -519,37 +525,36 @@ function applyMapLock() {
 }
 
 async function afterDrag(key, marker) {
-  const p = marker.getLatLng();
+  const p = marker.getPosition();
   const s = state[key];
-  s.lat = p.lat; s.lon = p.lng; s.moved = true; s.dragLabel = null;
+  s.lat = p.lat(); s.lon = p.lng(); s.moved = true; s.dragLabel = null;
   redrawLines(false);
   const my = s.rgSeq = (s.rgSeq || 0) + 1;
   try {
-    const name = await reverseGeocode(p.lat, p.lng);
+    const name = await reverseGeocode(s.lat, s.lon);
     if (state[key] === s && s.rgSeq === my && name) { s.dragLabel = name; updateResultCard(); }
   } catch (e) { /* 逆引きできないときは（地図で調整）のまま */ }
 }
 
-function drawMap() {
-  const el = document.getElementById("map");
+async function drawMap() {
+  await gmapsLoaded;
   if (!map) {
-    map = L.map(el, { zoomControl: true });
-    // 地図は標準（OpenStreetMap）に固定。配色はコンセプトカラー決定後に本設定（ベクター地図で完全カスタム予定）
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap contributors', maxZoom: 18
-    }).addTo(map);
-    layerGroup = L.layerGroup().addTo(map);
-
-    homeMarker = L.marker([0, 0], { icon: dotIcon("#2e5d33"), draggable: true, zIndexOffset: 1000 })
-      .addTo(map).bindTooltip("🏠 おうち（ドラッグOK）");
-    destMarker = L.marker([0, 0], { icon: dotIcon("#a9412f"), draggable: true, zIndexOffset: 1000 })
-      .addTo(map).bindTooltip("📍 目的地（ドラッグOK）");
-    homeMarker.on("dragend", () => afterDrag("home", homeMarker));
-    destMarker.on("dragend", () => afterDrag("dest", destMarker));
+    // 地図の配色は今のところGoogle標準（お店・観光地が出るのが目的のため）
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: LL(state.home.lat, state.home.lon), zoom: 11,
+      gestureHandling: "cooperative", clickableIcons: true,
+      mapTypeControl: false, streetViewControl: false, fullscreenControl: false, zoomControl: true
+    });
+    homeMarker = new google.maps.Marker({ map, draggable: true, zIndex: 1000,
+      title: "🏠 おうち（ドラッグで動かせます）", icon: dotIcon("#2e5d33") });
+    destMarker = new google.maps.Marker({ map, draggable: true, zIndex: 1000,
+      title: "📍 目的地（ドラッグで動かせます）", icon: dotIcon("#a9412f") });
+    homeMarker.addListener("dragend", () => afterDrag("home", homeMarker));
+    destMarker.addListener("dragend", () => afterDrag("dest", destMarker));
     applyMapLock();
   }
-  homeMarker.setLatLng([state.home.lat, state.home.lon]);
-  destMarker.setLatLng([state.dest.lat, state.dest.lon]);
+  homeMarker.setPosition(LL(state.home.lat, state.home.lon));
+  destMarker.setPosition(LL(state.dest.lat, state.dest.lon));
   redrawLines(true);
 }
 
@@ -586,7 +591,7 @@ async function run() {
 
     state = { mode: currentMode, home: { ...home, moved: false }, dest: { ...dest, moved: false } };
     document.getElementById("result").style.display = "block";
-    drawMap();
+    await drawMap();
     localStorage.setItem("yuki_home_zip", homeZip);
     localStorage.setItem("yuki_home_addr", homeAddr);
     document.getElementById("result").scrollIntoView({ behavior: "smooth" });
