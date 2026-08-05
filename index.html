@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>開運方位探し | ゆうきの扉</title>
+<!-- ホーム画面に追加したときのアイコンと名前（アイコンはリポジトリ内の実ファイルが必要） -->
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="開運方位探し">
+<meta name="theme-color" content="#38833c">
 <style>
   :root {
     --bg: #38833c;
@@ -265,14 +270,14 @@
   </div>
 
   <div class="panel">
-    <h2>🧭 方位を調べる</h2>
+    <h2>🧭 調べ方を選んでね</h2>
 
     <div class="mode-tabs">
-      <button type="button" class="mode-tab active" id="tabDest">目的地から調べる</button>
-      <button type="button" class="mode-tab" id="tabHoui">方位から調べる</button>
+      <button type="button" class="mode-tab active" id="tabHoui">方位から調べる</button>
+      <button type="button" class="mode-tab" id="tabDest">目的地から調べる</button>
     </div>
 
-    <div id="destBlock">
+    <div id="destBlock" style="display:none">
       <div class="field">
         <label>目的地の郵便番号</label>
         <input id="destZip" type="text" inputmode="numeric" placeholder="例: 060-0001">
@@ -285,7 +290,7 @@
       </div>
     </div>
 
-    <div id="houiBlock" style="display:none">
+    <div id="houiBlock">
       <div class="choice-label">開運の方位を選んでね</div>
       <div class="dir-grid" id="dirGrid"></div>
       <div class="choice-label">毎日のお出かけは5km・最大でも20km程度まで</div>
@@ -449,7 +454,7 @@ async function resolvePoint(key, zip, addrText) {
 
 let map = null, overlays = [], homeMarker = null, destMarker = null;
 let state = null; // { mode, home:{lat,lon,label,moved}, dest:{...} }
-let currentMode = "dest"; // "dest" | "houi"
+let currentMode = "houi"; // "houi" | "dest"（方位から調べるが上位・既定【2026/8/6 安達さん】）
 let chosenDirIdx = null, chosenDistKm = DISTS[0].km;
 
 const LL = (lat, lon) => ({ lat: lat, lng: lon });
