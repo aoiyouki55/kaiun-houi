@@ -24,7 +24,6 @@
     --ink: #33402a;
     --gold: #f0d48a;
     --gold-strong: #8a6b1f;
-    --accent: #2e5d33;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -87,10 +86,6 @@
     margin-bottom: 12px;
     display: flex; align-items: center; gap: 8px;
   }
-  .panel h3.who {
-    font-size: 13px; margin: 4px 0 10px;
-    border-left: 4px solid #8aa53f; padding-left: 8px;
-  }
   .field { margin-bottom: 12px; position: relative; }
   .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
   .field .hint { font-weight: normal; font-size: 12.5px; color: #6f7554; }
@@ -130,7 +125,6 @@
   }
   ul.cand-list li:last-child { border-bottom: none; }
   ul.cand-list li:hover { background: #eef2cf; }
-  .divider { border-top: 1.5px dashed #c5c98d; margin: 16px 0 14px; }
 
   .mode-tabs { display: flex; gap: 8px; margin: 4px 0 14px; }
   .mode-tab {
@@ -144,12 +138,6 @@
   .panel + .panel { margin-top: 16px; }
   .choice-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
   .choice-note { font-size: 12px; color: #6f7554; margin: -2px 0 8px; line-height: 1.7; }
-  /* 地図の距離の目安の円につけるラベル */
-  .km-label {
-    font-size: 10.5px; font-weight: 700; color: #2e5d33;
-    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
-    white-space: nowrap; text-align: center;
-  }
   .dir-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
   .dist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
   .choice {
@@ -211,11 +199,10 @@
     background: #fff6df; color: #7a5b12;
     border-radius: 10px; padding: 8px 10px; text-align: left;
   }
-  /* 画面が狭ければ自動で折り返す（パソコンは3つ横並び・スマホは2＋1） */
-  /* 画面が狭ければ自動で折り返す（パソコンは3つ横並び・スマホは2＋1で最後は横いっぱい） */
+  /* 入りきらない画面では自動で縦に折り返す */
   .map-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   button.fit-btn {
-    flex: 1 1 138px;
+    flex: 1 1 160px;
     border: 1.5px solid rgba(240,212,138,0.7);
     background: rgba(255,255,255,0.12);
     color: #f3f5dc;
@@ -227,6 +214,7 @@
   .map-note { font-size: 11.5px; color: #dfe6bf; margin-top: 8px; line-height: 1.8; text-align: center; }
   #map {
     height: 380px;
+    overflow: hidden; /* 万一エラー時の代替画像が出ても横スクロールさせない保険 */
     border-radius: 16px;
     margin-top: 8px;
     box-shadow: 0 6px 24px rgba(0,0,0,0.35);
@@ -245,6 +233,9 @@
 
   /* 「大きな地図で見る」= 画面いっぱいに広げる。別ページは開かない。スマホでもパソコンでも同じ動き */
   /* 地図の中に浮かべる方位パネル。既定は隠しておき、地図を広げたときだけ出す */
+  /* 地図の下のボタン（指2本の切り替え）。すぐ下の説明文とセットで読ませる */
+  .map-under { display: flex; justify-content: center; margin-top: 10px; }
+  .map-under .fit-btn { flex: 0 0 auto; padding: 9px 20px; }
   .mapbox { position: relative; }
   .map-badge { display: none; }
   .map-badge.show {
@@ -294,7 +285,6 @@
     このページでは、その土台になる「<b>おうちから見てどの方位か</b>」を調べられます。とびらがひらく日・時間は「今週の扉」「先読みの扉」でどうぞ。
   </div>
 
-  <div class="panels">
   <div class="panel">
     <h2>🏠 出発地点（おうち）を登録</h2>
 
@@ -342,7 +332,6 @@
     <button class="go" id="goBtn">とびらをひらく</button>
     <div class="error" id="errBox"></div>
   </div>
-  </div>
 
   <div id="result">
     <div class="result-card">
@@ -353,14 +342,12 @@
         ⚠ 方位の境目にかなり近い結果です。住所を丁目まで入れるか、地図の丸を正確な場所へ動かして、もう一度お確かめください。
       </div>
       <div class="route" id="routeText"></div>
-      <div class="drag-hint">地図の丸（🏠おうち・📍目的地）は指でつまんで動かせます。動かすと方位と距離がすぐ計算し直されます。<br>
-      地図を動かしすぎたら「🗺 全体表示」を押すと、おうちと目的地の両方が見える大きさに戻ります。</div>
+      <div class="drag-hint">地図の丸（🏠おうち 📍目的地）は指で動かせます。方位と距離もすぐ計算し直されます。</div>
     </div>
     <div class="mapwrap">
     <div class="map-tools">
-      <button type="button" class="fit-btn" id="lockBtn">🔓 地図を動かす</button>
+      <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示にもどす</button>
       <button type="button" class="fit-btn" id="bigBtn">🔍 大きな地図で見る</button>
-      <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示</button>
     </div>
     <!-- 地図を広げたときに、方位と距離を地図の上に大きく浮かべる -->
     <div class="mapbox">
@@ -370,6 +357,9 @@
         <div class="mb-dist" id="mbDist"></div>
       </div>
       <div id="map"></div>
+    </div>
+    <div class="map-under">
+      <button type="button" class="fit-btn" id="lockBtn">🔓 地図を動かす</button>
     </div>
     <div class="map-note" id="mapNote">
       地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>
@@ -394,18 +384,26 @@
 
 <!-- Googleマップ。キーはページに埋め込む前提の公開キーで、守りはGoogle Cloud側のリファラー制限が担う -->
 <script>
-  let __gmapsResolve;
+  // 地図が使えるかどうかを1つの約束（Promise）で表す。true=使える／false=使えない
+  // ⚠圏外・通信不良・広告ブロッカー等で読み込みに失敗しても、方位と距離は必ず出す（待ち続けない）
+  let __gmapsResolve, __gmapsSettled = false;
   const gmapsLoaded = new Promise(r => { __gmapsResolve = r; });
-  window.gmapsReady = () => __gmapsResolve();
-  // 地図が読み込めなかったとき（キーの制限・課金設定など）に知らせる
-  window.__gmAuthError = "";
+  function gmapsDone(ok) {
+    if (__gmapsSettled) return;
+    __gmapsSettled = true;
+    __gmapsResolve(ok);
+  }
+  window.gmapsReady = () => gmapsDone(true);
+  window.gmapsFail = () => gmapsDone(false);
+  // 読み込み後の認証エラー（キーの制限・課金設定など）。灰色のエラー枠を出さず、案内文に差し替える
   window.gm_authFailure = () => {
-    window.__gmAuthError = "認証エラー";
-    const note = document.getElementById("mapNote");
-    if (note) note.innerHTML = "⚠ 地図をうまく読み込めませんでした。少し時間をおいて、ページを開き直してみてください。";
+    gmapsDone(false);
+    if (typeof showMapUnavailable === "function") showMapUnavailable();
   };
+  // 8秒たっても読み込めなければ、地図はあきらめて先へ進む
+  setTimeout(() => { if (!(window.google && window.google.maps)) gmapsDone(false); }, 8000);
 </script>
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE&language=ja&region=JP&loading=async&callback=gmapsReady"></script>
+<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE&language=ja&region=JP&loading=async&callback=gmapsReady" onerror="gmapsFail()"></script>
 <!-- 市町村コード表（国土地理院公式・自治体合併で内容が更新されるためSRI固定はしない。GSI名前空間が先に必要） -->
 <script>window.GSI = window.GSI || {};</script>
 <script src="https://maps.gsi.go.jp/js/muni.js" defer></script>
@@ -636,8 +634,18 @@ async function afterDrag(key, marker) {
   } catch (e) { /* 逆引きできないときは（地図で調整）のまま */ }
 }
 
+// 地図が使えないときは、地図まわりだけ隠して先へ進む（方位と距離はそのまま使える）
+function showMapUnavailable() {
+  const hide = sel => { const el = document.querySelector(sel); if (el) el.style.display = "none"; };
+  hide(".map-tools"); hide(".mapbox"); hide(".map-under");
+  const note = document.getElementById("mapNote");
+  if (note) note.innerHTML = "⚠ 地図をうまく読み込めませんでした。<br>方位と距離はそのままお使いいただけます。電波のよい場所で開き直すと、地図も出ます。";
+}
+
 async function drawMap() {
-  await gmapsLoaded;
+  await gmapsLoaded; // 待つのはここまで。時間切れでも先へ進む
+  // 実際に使えるかは、旗ではなく本体の有無で判断する（時間切れ後に間に合った場合も拾える）
+  if (!(window.google && window.google.maps)) { showMapUnavailable(); return; }
   if (!map) {
     // 地図の配色は今のところGoogle標準（お店・観光地が出るのが目的のため）
     map = new google.maps.Map(document.getElementById("map"), {
@@ -691,10 +699,12 @@ async function run() {
 
     state = { mode: currentMode, home: { ...home, moved: false }, dest: { ...dest, moved: false } };
     document.getElementById("result").classList.add("show");
-    await drawMap();
+    // 先に方位と距離を出す。地図の読み込みを待たないので、地図が遅くても・出なくても結果は必ず見える
+    updateResultCard();
     localStorage.setItem("yuki_home_zip", homeZip);
     localStorage.setItem("yuki_home_addr", homeAddr);
     document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+    drawMap();
   } catch (e) {
     err.textContent = "⚠ " + e.message;
     err.style.display = "block";
