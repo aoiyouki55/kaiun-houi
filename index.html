@@ -244,13 +244,32 @@
   footer a { color: var(--gold); font-weight: 700; }
 
   /* 「大きな地図で見る」= 画面いっぱいに広げる。別ページは開かない。スマホでもパソコンでも同じ動き */
+  /* 地図の中に浮かべる方位パネル。既定は隠しておき、地図を広げたときだけ出す */
+  .mapbox { position: relative; }
+  .map-badge { display: none; }
+  .map-badge.show {
+    display: block;
+    position: absolute; left: 14px; top: 14px; z-index: 5;
+    background: rgba(237,239,181,0.95);
+    border: 2px solid var(--gold-strong);
+    border-radius: 14px;
+    padding: 9px 18px 11px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    text-align: center;
+    pointer-events: none;
+  }
+  .mb-lead { font-size: 11.5px; font-weight: 700; color: #5f6647; }
+  .mb-dir { font-size: 32px; font-weight: 800; letter-spacing: 3px; color: var(--gold-strong); line-height: 1.2; }
+  .mb-dist { font-size: 15px; font-weight: 700; color: #4c5238; }
+
   .mapwrap.expanded {
     position: fixed; inset: 0; z-index: 2000;
     background: var(--bg2); padding: 10px;
     display: flex; flex-direction: column;
   }
   .mapwrap.expanded .map-tools { margin-top: 0; }
-  .mapwrap.expanded #map { flex: 1; height: auto; margin-top: 8px; }
+  .mapwrap.expanded .mapbox { flex: 1; min-height: 0; margin-top: 8px; }
+  .mapwrap.expanded #map { height: 100%; margin-top: 0; }
   .mapwrap.expanded .map-note { display: none; }
 </style>
 </head>
@@ -334,7 +353,8 @@
         ⚠ 方位の境目にかなり近い結果です。住所を丁目まで入れるか、地図の丸を正確な場所へ動かして、もう一度お確かめください。
       </div>
       <div class="route" id="routeText"></div>
-      <div class="drag-hint">地図の丸（🏠おうち・📍目的地）は指でつまんで動かせます。動かすと方位と距離がすぐ計算し直されます。</div>
+      <div class="drag-hint">地図の丸（🏠おうち・📍目的地）は指でつまんで動かせます。動かすと方位と距離がすぐ計算し直されます。<br>
+      地図を動かしすぎたら「🗺 全体表示」を押すと、おうちと目的地の両方が見える大きさに戻ります。</div>
     </div>
     <div class="mapwrap">
     <div class="map-tools">
@@ -342,7 +362,15 @@
       <button type="button" class="fit-btn" id="bigBtn">🔍 大きな地図で見る</button>
       <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示</button>
     </div>
-    <div id="map"></div>
+    <!-- 地図を広げたときに、方位と距離を地図の上に大きく浮かべる -->
+    <div class="mapbox">
+      <div class="map-badge" id="mapBadge">
+        <div class="mb-lead" id="mbLead">おうちから見て</div>
+        <div class="mb-dir" id="mbDir">──</div>
+        <div class="mb-dist" id="mbDist"></div>
+      </div>
+      <div id="map"></div>
+    </div>
     <div class="map-note" id="mapNote">
       地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>
       1本で動かしたいときは「地図を動かす」を押してください。
@@ -496,8 +524,15 @@ function updateResultCard() {
   const dist = distanceKm(home.lat, home.lon, dest.lat, dest.lon);
   document.getElementById("leadText").textContent =
     state.mode === "houi" ? "お出かけ先の目安は、おうちから見て" : "目的地は、おうちから見て";
-  document.getElementById("dirName").textContent = DIRS[dirIndex(brg)];
-  document.getElementById("distText").textContent = "距離 約" + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + "km";
+  const dirLabel = DIRS[dirIndex(brg)];
+  const distLabel = "距離 約" + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + "km";
+  document.getElementById("dirName").textContent = dirLabel;
+  document.getElementById("distText").textContent = distLabel;
+  // 地図の中に浮かべるパネルにも同じ内容を反映（丸を動かすたびに更新される）
+  document.getElementById("mbLead").textContent =
+    state.mode === "houi" ? "お出かけ先の目安" : "おうちから見て";
+  document.getElementById("mbDir").textContent = dirLabel;
+  document.getElementById("mbDist").textContent = distLabel;
   const fmt = p => p.moved ? ((p.dragLabel || p.label) + "（地図で調整）") : p.label;
   document.getElementById("routeText").innerHTML = "🏠 " + fmt(home) + "<br>↓<br>📍 " + fmt(dest);
   document.getElementById("boundaryNote").style.display =
@@ -580,6 +615,7 @@ let mapExpanded = false;
 function toggleExpand(force) {
   mapExpanded = (typeof force === "boolean") ? force : !mapExpanded;
   document.querySelector(".mapwrap").classList.toggle("expanded", mapExpanded);
+  document.getElementById("mapBadge").classList.toggle("show", mapExpanded);
   document.body.style.overflow = mapExpanded ? "hidden" : "";
   const b = document.getElementById("bigBtn");
   b.textContent = mapExpanded ? "✕ 地図を閉じる" : "🔍 大きな地図で見る";
