@@ -185,6 +185,7 @@
   }
 
   #result { display: none; margin-top: 26px; }
+  #result.show { display: block; }
   .result-card {
     background: var(--card);
     color: var(--ink);
@@ -210,13 +211,17 @@
     background: #fff6df; color: #7a5b12;
     border-radius: 10px; padding: 8px 10px; text-align: left;
   }
-  .map-tools { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+  /* 画面が狭ければ自動で折り返す（パソコンは3つ横並び・スマホは2＋1） */
+  /* 画面が狭ければ自動で折り返す（パソコンは3つ横並び・スマホは2＋1で最後は横いっぱい） */
+  .map-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   button.fit-btn {
+    flex: 1 1 138px;
     border: 1.5px solid rgba(240,212,138,0.7);
     background: rgba(255,255,255,0.12);
     color: #f3f5dc;
-    font-size: 13px; font-weight: 700;
-    padding: 8px 14px; border-radius: 10px; cursor: pointer;
+    font-size: 12.5px; font-weight: 700;
+    padding: 9px 6px; border-radius: 10px; cursor: pointer;
+    white-space: nowrap;
   }
   button.fit-btn.on { background: var(--gold); color: #33402a; border-color: var(--gold); }
   .map-note { font-size: 11.5px; color: #dfe6bf; margin-top: 8px; line-height: 1.8; text-align: center; }
@@ -237,6 +242,16 @@
   .outro a { color: var(--gold); font-weight: 700; }
   footer { text-align: center; font-size: 11px; color: #bcd3ab; margin-top: 30px; line-height: 1.9; }
   footer a { color: var(--gold); font-weight: 700; }
+
+  /* 「大きな地図で見る」= 画面いっぱいに広げる。別ページは開かない。スマホでもパソコンでも同じ動き */
+  .mapwrap.expanded {
+    position: fixed; inset: 0; z-index: 2000;
+    background: var(--bg2); padding: 10px;
+    display: flex; flex-direction: column;
+  }
+  .mapwrap.expanded .map-tools { margin-top: 0; }
+  .mapwrap.expanded #map { flex: 1; height: auto; margin-top: 8px; }
+  .mapwrap.expanded .map-note { display: none; }
 </style>
 </head>
 <body>
@@ -260,6 +275,7 @@
     このページでは、その土台になる「<b>おうちから見てどの方位か</b>」を調べられます。とびらがひらく日・時間は「今週の扉」「先読みの扉」でどうぞ。
   </div>
 
+  <div class="panels">
   <div class="panel">
     <h2>🏠 出発地点（おうち）を登録</h2>
 
@@ -307,6 +323,7 @@
     <button class="go" id="goBtn">とびらをひらく</button>
     <div class="error" id="errBox"></div>
   </div>
+  </div>
 
   <div id="result">
     <div class="result-card">
@@ -319,14 +336,17 @@
       <div class="route" id="routeText"></div>
       <div class="drag-hint">地図の丸（🏠おうち・📍目的地）は指でつまんで動かせます。動かすと方位と距離がすぐ計算し直されます。</div>
     </div>
+    <div class="mapwrap">
     <div class="map-tools">
       <button type="button" class="fit-btn" id="lockBtn">🔓 地図を動かす</button>
-      <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示にもどす</button>
+      <button type="button" class="fit-btn" id="bigBtn">🔍 大きな地図で見る</button>
+      <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示</button>
     </div>
     <div id="map"></div>
     <div class="map-note" id="mapNote">
       地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>
       1本で動かしたいときは「地図を動かす」を押してください。
+    </div>
     </div>
   </div>
 
@@ -555,6 +575,19 @@ function applyMapLock() {
     : '<b>いま地図を動かせます。</b>ページを動かしたいときは「地図をとめる」を押してください。';
 }
 
+// 「大きな地図で見る」= 同じページのまま画面いっぱいに広げる（別ページは開かない）
+let mapExpanded = false;
+function toggleExpand(force) {
+  mapExpanded = (typeof force === "boolean") ? force : !mapExpanded;
+  document.querySelector(".mapwrap").classList.toggle("expanded", mapExpanded);
+  document.body.style.overflow = mapExpanded ? "hidden" : "";
+  const b = document.getElementById("bigBtn");
+  b.textContent = mapExpanded ? "✕ 地図を閉じる" : "🔍 大きな地図で見る";
+  b.classList.toggle("on", mapExpanded);
+  // 広げた直後に、出発地点と目的地が収まるように描き直す
+  setTimeout(() => { if (map && state) fitWhole(); }, 150);
+}
+
 async function afterDrag(key, marker) {
   const p = marker.getPosition();
   const s = state[key];
@@ -621,7 +654,7 @@ async function run() {
     }
 
     state = { mode: currentMode, home: { ...home, moved: false }, dest: { ...dest, moved: false } };
-    document.getElementById("result").style.display = "block";
+    document.getElementById("result").classList.add("show");
     await drawMap();
     localStorage.setItem("yuki_home_zip", homeZip);
     localStorage.setItem("yuki_home_addr", homeAddr);
@@ -717,6 +750,8 @@ function buildChoices() {
 document.getElementById("goBtn").addEventListener("click", run);
 document.getElementById("fitBtn").addEventListener("click", fitWhole);
 document.getElementById("lockBtn").addEventListener("click", () => { mapLocked = !mapLocked; applyMapLock(); });
+document.getElementById("bigBtn").addEventListener("click", () => toggleExpand());
+document.addEventListener("keydown", e => { if (e.key === "Escape" && mapExpanded) toggleExpand(false); });
 document.getElementById("tabDest").addEventListener("click", () => setMode("dest"));
 document.getElementById("tabHoui").addEventListener("click", () => setMode("houi"));
 
