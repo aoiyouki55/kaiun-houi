@@ -62,6 +62,15 @@
     line-height: 1.9;
     color: var(--gold);
   }
+  /* テスト表示中の目印。テスト用の鍵を使っている端末にだけ出る（会員さんには出ない） */
+  .test-flag { display: none; }
+  .test-flag.show {
+    display: block; text-align: center;
+    background: #8a6b1f; color: #fff;
+    font-size: 12px; font-weight: 700; line-height: 1.6;
+    padding: 7px 14px; border-radius: 999px;
+    max-width: 360px; margin: 0 auto 14px;
+  }
   .intro {
     background: rgba(255,255,255,0.10);
     border: 1px solid rgba(240,212,138,0.5);
@@ -279,6 +288,8 @@
     </div>
   </div>
 
+  <div class="test-flag" id="testFlag">🔧 テスト表示中（この端末の利用は本番の記録に入りません）</div>
+
   <div class="intro">
     <b>開運方位探しについて</b><br>
     ゆうきの扉は「<b>何時に、どの方位へ向かうか</b>」で運気を上げる占いです。旅行やお引っ越しなら「<b>どの日に、どの方位か</b>」。<br>
@@ -395,6 +406,19 @@
   }
   window.gmapsReady = () => gmapsDone(true);
   window.gmapsFail = () => gmapsDone(false);
+
+  // 地図の鍵は2本。テスト用に切り替えると、Google側の指標で本番と分けて数えられる
+  // ⚠どちらもページに埋め込む前提の公開キー。守りはリファラー制限（aoiyouki55.github.io のみ）が担う
+  const GMAPS_KEY_HONBAN = "AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE";
+  const GMAPS_KEY_TEST   = "AIzaSyCo6AluEfxHCLyuTaOXDlkrXhAaBBPugKQ";
+  // ?me=1 でこの端末をテスト用にする（一度設定すればずっと続く）。?me=0 で本番に戻す
+  let IS_TEST = false;
+  try {
+    const q = new URLSearchParams(location.search).get("me");
+    if (q === "1") localStorage.setItem("yuki_test_mode", "1");
+    if (q === "0") localStorage.removeItem("yuki_test_mode");
+    IS_TEST = localStorage.getItem("yuki_test_mode") === "1";
+  } catch (e) { /* ブラウザの設定で記憶が使えない場合は本番扱い */ }
   // 読み込み後の認証エラー（キーの制限・課金設定など）。灰色のエラー枠を出さず、案内文に差し替える
   window.gm_authFailure = () => {
     gmapsDone(false);
@@ -402,8 +426,17 @@
   };
   // 8秒たっても読み込めなければ、地図はあきらめて先へ進む
   setTimeout(() => { if (!(window.google && window.google.maps)) gmapsDone(false); }, 8000);
+
+  // 選んだ鍵で地図を読み込む
+  (function () {
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://maps.googleapis.com/maps/api/js?key=" + (IS_TEST ? GMAPS_KEY_TEST : GMAPS_KEY_HONBAN)
+          + "&language=ja&region=JP&loading=async&callback=gmapsReady";
+    s.onerror = () => gmapsDone(false);
+    document.head.appendChild(s);
+  })();
 </script>
-<script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE&language=ja&region=JP&loading=async&callback=gmapsReady" onerror="gmapsFail()"></script>
 <!-- 市町村コード表（国土地理院公式・自治体合併で内容が更新されるためSRI固定はしない。GSI名前空間が先に必要） -->
 <script>window.GSI = window.GSI || {};</script>
 <script src="https://maps.gsi.go.jp/js/muni.js" defer></script>
@@ -802,6 +835,7 @@ document.getElementById("tabDest").addEventListener("click", () => setMode("dest
 document.getElementById("tabHoui").addEventListener("click", () => setMode("houi"));
 
 window.addEventListener("DOMContentLoaded", () => {
+  if (typeof IS_TEST !== "undefined" && IS_TEST) document.getElementById("testFlag").classList.add("show");
   buildChoices();
   setupZipEcho("homeZip", "homeZipEcho");
   setupZipEcho("destZip", "destZipEcho");
