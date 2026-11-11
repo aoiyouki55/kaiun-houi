@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>【試作】開運方位探し | ゆうきの扉</title>
+<!-- ホーム画面に追加したときのアイコンと名前（アイコンはリポジトリ内の実ファイルが必要） -->
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<meta name="apple-mobile-web-app-title" content="開運方位探し">
+<meta name="theme-color" content="#38833c">
+<!-- リンクカード用（noteやSNSで貼ったときの見た目） -->
+<meta property="og:title" content="開運方位探し | ゆうきの扉">
+<meta property="og:description" content="おうちから見て、目的地はどの方位？郵便番号を入れるだけで、開運の方位がすぐ分かります。">
+<meta property="og:image" content="https://aoiyouki55.github.io/kaiun-houi/ogp.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    --bg: #38833c;
+    --bg2: #2A6330;
+    --card: #EDEFB5;
+    --ink: #33402a;
+    --gold: #f0d48a;
+    --gold-strong: #8a6b1f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    color: #f3f5dc;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* トップの飾り（星と鳥）。文字の下に敷く。画像はHTML内に埋め込み済み＝1ファイルで完結 */
+  .hero { position: relative; }
+  .hero::before {
+    content: "";
+    position: absolute; left: -16px; right: -16px; top: -6px;
+    aspect-ratio: 450 / 225;
+    background: url("data:image/png;base64,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") no-repeat center top / 100% auto;
+    pointer-events: none;
+  }
+  .hero > * { position: relative; }
+
+  header { text-align: center; padding: 18px 0 10px; }
+  header .brand { font-size: 17px; letter-spacing: 3px; color: var(--gold); }
+  header h1 { font-size: 32px; margin-top: 8px; letter-spacing: 2px; }
+  header .sub { font-size: 12px; margin-top: 6px; color: #dfe6bf; }
+
+  .notice {
+    background: rgba(240,212,138,0.16);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 16px 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.9;
+    color: var(--gold);
+  }
+  /* テスト表示中の目印。テスト用の鍵を使っている端末にだけ出る（会員さんには出ない） */
+  .test-flag { display: none; }
+  .test-flag.show {
+    display: block; text-align: center;
+    background: #8a6b1f; color: #fff;
+    font-size: 12px; font-weight: 700; line-height: 1.6;
+    padding: 7px 14px; border-radius: 999px;
+    max-width: 360px; margin: 0 auto 14px;
+  }
+  .intro {
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(240,212,138,0.5);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.9;
+    margin: 14px 0 20px;
+  }
+  .intro b { color: var(--gold); }
+
+  .panel {
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .panel h2 {
+    font-size: 15px;
+    color: var(--gold-strong);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .field { margin-bottom: 12px; position: relative; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field .hint { font-weight: normal; font-size: 12.5px; color: #6f7554; }
+  /* 「任意」を目立たせるバッジ（入れなくても使えることが一目で分かるように） */
+  .opt {
+    display: inline-block;
+    background: #8a6b1f; color: #fff;
+    font-size: 12px; font-weight: 700;
+    padding: 2px 10px; border-radius: 999px;
+    margin: 0 6px; vertical-align: 1px;
+  }
+  .field input {
+    width: 100%;
+    font-size: 18px;
+    padding: 12px 14px;
+    border: 1.5px solid #c5c98d;
+    border-radius: 10px;
+    background: #fbfce9;
+  }
+  .field input:focus { outline: 2px solid #8aa53f; border-color: #8aa53f; }
+  .zip-echo { font-size: 12.5px; color: #4c6b2f; margin-top: 5px; min-height: 1em; font-weight: 600; }
+  ul.cand-list {
+    display: none;
+    list-style: none;
+    position: absolute; left: 0; right: 0; top: 100%;
+    z-index: 1200;
+    background: #fffef2;
+    border: 1.5px solid #8aa53f;
+    border-radius: 10px;
+    margin-top: 4px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+  }
+  ul.cand-list li {
+    padding: 10px 12px; font-size: 13.5px; cursor: pointer;
+    border-bottom: 1px solid #e6e8c2;
+  }
+  ul.cand-list li:last-child { border-bottom: none; }
+  ul.cand-list li:hover { background: #eef2cf; }
+
+  .mode-tabs { display: flex; gap: 8px; margin: 4px 0 14px; }
+  .mode-tab {
+    flex: 1; padding: 11px 6px;
+    border: 1.5px solid #c5c98d; border-radius: 10px;
+    background: #fbfce9; color: #7d8263;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .mode-tab.active { background: #2e5d33; border-color: #2e5d33; color: #fff; }
+
+  .panel + .panel { margin-top: 16px; }
+  .choice-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .choice-note { font-size: 12px; color: #6f7554; margin: -2px 0 8px; line-height: 1.7; }
+  .dir-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .dist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px; }
+  .choice {
+    padding: 11px 4px;
+    border: 1.5px solid #c5c98d; border-radius: 10px;
+    background: #fbfce9; color: #55603f;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    text-align: center;
+  }
+  .choice small { display: block; font-size: 10.5px; font-weight: 600; color: #8a8f6a; margin-top: 2px; }
+  .choice.active { background: #8a6b1f; border-color: #8a6b1f; color: #fff; }
+  .choice.active small { color: #f0e2b8; }
+
+  button.go {
+    width: 100%;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    background: linear-gradient(135deg, #55803a 0%, #2e5d33 100%);
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button.go:active { transform: translateY(1px); }
+  .error {
+    display: none;
+    margin-top: 12px;
+    background: #fdecea; color: #8a2a20;
+    border-radius: 10px; padding: 10px 12px; font-size: 13px;
+  }
+
+  #result { display: none; margin-top: 26px; }
+  #result.show { display: block; }
+  .result-card {
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .result-card .lead { font-size: 17px; font-weight: 700; color: #4c5238; }
+  .result-card .direction {
+    font-size: 48px; font-weight: 800; letter-spacing: 6px;
+    color: var(--gold-strong); margin: 8px 0 4px;
+  }
+  .result-card .dist { font-size: 20px; font-weight: 700; color: #4c5238; }
+  .result-card .route {
+    margin-top: 12px; font-size: 12.5px; line-height: 1.8; color: #4c5238;
+    border-top: 1px dashed #c5c98d; padding-top: 10px;
+  }
+  .drag-hint { margin-top: 8px; font-size: 11.5px; color: #83885f; }
+  .boundary-note {
+    display: none;
+    margin-top: 10px; font-size: 12px;
+    background: #fff6df; color: #7a5b12;
+    border-radius: 10px; padding: 8px 10px; text-align: left;
+  }
+  /* 入りきらない画面では自動で縦に折り返す */
+  .map-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  button.fit-btn {
+    flex: 1 1 160px;
+    border: 1.5px solid rgba(240,212,138,0.7);
+    background: rgba(255,255,255,0.12);
+    color: #f3f5dc;
+    font-size: 12.5px; font-weight: 700;
+    padding: 9px 6px; border-radius: 10px; cursor: pointer;
+    white-space: nowrap;
+  }
+  button.fit-btn.on { background: var(--gold); color: #33402a; border-color: var(--gold); }
+  .map-note { font-size: 11.5px; color: #dfe6bf; margin-top: 8px; line-height: 1.8; text-align: center; }
+  #map {
+    height: 380px;
+    overflow: hidden; /* 万一エラー時の代替画像が出ても横スクロールさせない保険 */
+    border-radius: 16px;
+    margin-top: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .outro {
+    margin-top: 22px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(240,212,138,0.5);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 13px; line-height: 1.9;
+  }
+  .outro a { color: var(--gold); font-weight: 700; }
+  footer { text-align: center; font-size: 11px; color: #bcd3ab; margin-top: 30px; line-height: 1.9; }
+  footer a { color: var(--gold); font-weight: 700; }
+
+  /* 「大きな地図で見る」= 画面いっぱいに広げる。別ページは開かない。スマホでもパソコンでも同じ動き */
+  /* 地図の中に浮かべる方位パネル。既定は隠しておき、地図を広げたときだけ出す */
+  /* 地図の下のボタン（指2本の切り替え）。すぐ下の説明文とセットで読ませる */
+  .map-under { display: flex; justify-content: center; margin-top: 10px; }
+  .map-under .fit-btn { flex: 0 0 auto; padding: 9px 20px; }
+  .mapbox { position: relative; }
+  .map-badge { display: none; }
+  .map-badge.show {
+    display: block;
+    position: absolute; left: 14px; top: 14px; z-index: 5;
+    background: rgba(237,239,181,0.95);
+    border: 2px solid var(--gold-strong);
+    border-radius: 14px;
+    padding: 9px 18px 11px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    text-align: center;
+    pointer-events: none;
+  }
+  .mb-lead { font-size: 11.5px; font-weight: 700; color: #5f6647; }
+  .mb-dir { font-size: 32px; font-weight: 800; letter-spacing: 3px; color: var(--gold-strong); line-height: 1.2; }
+  .mb-dist { font-size: 15px; font-weight: 700; color: #4c5238; }
+
+  .mapwrap.expanded {
+    position: fixed; inset: 0; z-index: 2000;
+    background: var(--bg2); padding: 10px;
+    display: flex; flex-direction: column;
+  }
+  .mapwrap.expanded .map-tools { margin-top: 0; }
+  .mapwrap.expanded .mapbox { flex: 1; min-height: 0; margin-top: 8px; }
+  .mapwrap.expanded #map { height: 100%; margin-top: 0; }
+  .mapwrap.expanded .map-note { display: none; }
+
+  /* ▼▼ 本命機能「開運方位を探す」試作（2026/9/2 SP占いアプリ設計01）。色・角R・余白は既存の設定を継承 ▼▼ */
+  .yk-nav { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 12px; }
+  .yk-datewrap { position: relative; }
+  .yk-date { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: var(--ink); text-align: center; padding: 4px 2px; }
+  .yk-dateinput { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; }
+  .yk-nav > button {
+    border: 1.5px solid #c5c98d; background: #fbfce9; color: #55603f;
+    border-radius: 10px; font-size: 13px; font-weight: 700; padding: 8px 10px; cursor: pointer; white-space: nowrap;
+  }
+  .yk-legend { font-size: 12px; line-height: 1.9; color: #4c5238; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 0 14px; }
+  .yk-board { position: relative; max-width: 420px; margin: 0 auto; }
+  .yk-board img { width: 100%; display: block; }
+  .yk-sym { position: absolute; transform: translate(-50%, -50%); font-weight: 800; color: #6b5947; font-size: clamp(22px, 8vw, 34px); line-height: 1; }
+  .yk-sym.sm { font-size: clamp(13px, 4.5vw, 19px); }
+  .yk-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--ink); }
+  .yk-center .yk-ct { font-size: clamp(22px, 8vw, 32px); font-weight: 800; letter-spacing: 1px; white-space: nowrap; }
+  .yk-arrow { border: none; background: none; font-size: 20px; color: var(--ink); cursor: pointer; padding: 2px 8px; line-height: 1; }
+  .yk-center-row { display: flex; align-items: center; justify-content: center; }
+  .yk-notes { margin-top: 12px; font-size: 13px; line-height: 2.0; color: #4c5238; }
+  .yk-rank { font-size: 14px; line-height: 2.2; color: var(--ink); margin-top: 10px; }
+  .yk-na { margin: 14px 0; font-size: 13px; color: #6f7554; text-align: center; }
+  /* ▲▲ 本命機能ここまで ▲▲ */
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <header>
+      <div class="brand">✦ ゆうきの扉 ✦</div>
+      <h1>開運方位探し</h1>
+      <div class="sub">おうちから見て、目的地はどの方位？</div>
+    </header>
+
+    <div class="notice">
+      🎁 ただいま公開記念につき、<br>どなたでもお使いいただけます。<br>今後はメンバーシップ特典になります。
+    </div>
+  </div>
+
+  <div class="test-flag" id="testFlag">🔧 テスト表示中（この端末の利用は本番の記録に入りません）</div>
+
+  <div class="intro">
+    <b>開運方位（吉方位）探しについて</b><br>
+    ゆうきの扉は「<b>何時に、どの方位へ向かうか</b>」で運気を上げる占いです。旅行やお引っ越しなら「<b>どの日に、どの方位がいいか</b>」を探してください。<br>
+    開運方位（吉方位）が分かったら、地図から「<b>おうちから見た方位</b>」も調べられます。
+  </div>
+
+  <!-- ▼▼ 本命機能「開運方位を探す」試作（2026/9/2 SP占いアプリ設計01） ▼▼ -->
+  <div class="test-flag show">🔧 試作版です（本物のアプリには未反映）</div>
+  <div class="panel" id="ykPanel">
+    <h2>🔮 開運方位を探す</h2>
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="ykTabDate" type="button">日付から探す</button>
+      <button class="mode-tab" id="ykTabDir" type="button">方位から探す</button>
+      <button class="mode-tab" id="ykTabLuck" type="button">運気から探す</button>
+    </div>
+
+    <div id="ykViewDate">
+      <div class="yk-nav">
+        <button id="ykPrevDay" type="button">◀ 前日</button>
+        <div class="yk-datewrap"><div class="yk-date" id="ykDateLabel"></div>
+          <input type="date" class="yk-dateinput" id="ykDatePick"></div>
+        <button id="ykNextDay" type="button">翌日 ▶</button>
+      </div>
+      <div class="yk-legend"><span>◎大開運の方位</span><span>○吉方位</span><span>△どちらでもない</span><span>×悪い方位</span><span>✖最凶の方位</span></div>
+      <div class="yk-board">
+        <img src="方位ベース.png" alt="八方位の図">
+        <div id="ykSymsDate"></div>
+        <div class="yk-center">
+          <button class="yk-arrow" id="ykTimeUp" type="button">▲</button>
+          <div class="yk-ct" id="ykTimeLabel"></div>
+          <button class="yk-arrow" id="ykTimeDown" type="button">▼</button>
+        </div>
+      </div>
+      <div class="yk-notes" id="ykNotesDate"></div>
+      <div class="choice-note" style="margin-top:8px">※ 出発時間は前後30分を目安にしてください。</div>
+    </div>
+
+    <div id="ykViewDir" style="display:none">
+      <div class="yk-nav">
+        <button id="ykPrevDay2" type="button">◀ 前日</button>
+        <div class="yk-datewrap"><div class="yk-date" id="ykDateLabel2"></div>
+          <input type="date" class="yk-dateinput" id="ykDatePick2"></div>
+        <button id="ykNextDay2" type="button">翌日 ▶</button>
+      </div>
+      <div class="yk-legend"><span>◎大開運の方位</span><span>○吉方位</span><span>△どちらでもない</span><span>×悪い方位</span><span>✖最凶の方位</span></div>
+      <div class="yk-board">
+        <img src="時間ベース.png" alt="24時間の図">
+        <div id="ykSymsDir"></div>
+        <div class="yk-center">
+          <div class="yk-center-row">
+            <button class="yk-arrow" id="ykDirPrev" type="button">◀</button>
+            <div class="yk-ct" id="ykDirLabel"></div>
+            <button class="yk-arrow" id="ykDirNext" type="button">▶</button>
+          </div>
+        </div>
+      </div>
+      <div class="yk-notes" id="ykNotesDir"></div>
+      <div class="choice-note" style="margin-top:8px">※ 出発時間は前後30分を目安にしてください。</div>
+    </div>
+
+    <div id="ykViewLuck" style="display:none">
+      <div class="yk-nav">
+        <button id="ykPrevMon" type="button">◀ 前月</button>
+        <div class="yk-datewrap"><div class="yk-date" id="ykMonLabel"></div>
+          <select class="yk-dateinput" id="ykMonSel"></select></div>
+        <button id="ykNextMon" type="button">翌月 ▶</button>
+      </div>
+      <div class="dist-grid" style="margin-bottom:10px">
+        <button class="choice active" data-yktheme="開" type="button">💼開門💼</button>
+        <button class="choice" data-yktheme="生" type="button">💰️生門💰️</button>
+        <button class="choice" data-yktheme="休" type="button">💖休門💖</button>
+      </div>
+      <div class="choice-label" id="ykRankTitle">大開運日</div>
+      <div class="yk-rank" id="ykRankList"></div>
+      <div class="choice-note" style="margin-top:8px">※ 出発時間は前後30分を目安にしてください。</div>
+    </div>
+  </div>
+  <!-- ▲▲ 本命機能ここまで ▲▲ -->
+
+
+  <div class="panel">
+    <h2>🏠 出発地点（おうち）を登録</h2>
+
+    <div class="field">
+      <label>郵便番号 <span class="hint">（次回から自動で入ります）</span></label>
+      <input id="homeZip" type="text" inputmode="numeric" placeholder="例: 100-0005" autocomplete="postal-code">
+      <div class="zip-echo" id="homeZipEcho"></div>
+    </div>
+    <div class="field">
+      <label>住所・地名 <span class="opt">任意</span><span class="hint">入れるとより正確。候補から選べます</span></label>
+      <input id="homeAddr" type="text" placeholder="例: 千代田区丸の内1丁目" autocomplete="off">
+      <ul class="cand-list" id="homeAddrList"></ul>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🧭 調べ方を選んでね</h2>
+
+    <div class="mode-tabs">
+      <button type="button" class="mode-tab active" id="tabHoui">方位から調べる</button>
+      <button type="button" class="mode-tab" id="tabDest">目的地から調べる</button>
+    </div>
+
+    <div id="destBlock" style="display:none">
+      <div class="field">
+        <label>目的地の郵便番号</label>
+        <input id="destZip" type="text" inputmode="numeric" placeholder="例: 060-0001">
+        <div class="zip-echo" id="destZipEcho"></div>
+      </div>
+      <div class="field">
+        <label>目的地の住所・地名 <span class="opt">任意</span><span class="hint">県名や市名から入れると確実</span></label>
+        <input id="destAddr" type="text" placeholder="例: 長野県軽井沢町" autocomplete="off">
+        <ul class="cand-list" id="destAddrList"></ul>
+      </div>
+    </div>
+
+    <div id="houiBlock">
+      <div class="choice-label">開運の方位を選んでね</div>
+      <div class="dir-grid" id="dirGrid"></div>
+      <div class="choice-label">毎日のお出かけは5km・最大でも20km程度まで</div>
+      <div class="choice-note">20km以上は、祐気取り（開運のお出かけ）におすすめです。</div>
+      <div class="dist-grid" id="distGrid"></div>
+    </div>
+
+    <button class="go" id="goBtn">とびらをひらく</button>
+    <div class="error" id="errBox"></div>
+  </div>
+
+  <div id="result">
+    <div class="result-card">
+      <div class="lead" id="leadText">目的地は、おうちから見て</div>
+      <div class="direction" id="dirName">──</div>
+      <div class="dist" id="distText"></div>
+      <div class="boundary-note" id="boundaryNote">
+        ⚠ 方位の境目にかなり近い結果です。住所を丁目まで入れるか、地図の丸を正確な場所へ動かして、もう一度お確かめください。
+      </div>
+      <div class="route" id="routeText"></div>
+      <div class="drag-hint">地図の丸（🏠おうち 📍目的地）は指で動かせます。方位と距離もすぐ計算し直されます。</div>
+    </div>
+    <div class="mapwrap">
+    <div class="map-tools">
+      <button type="button" class="fit-btn" id="fitBtn">🗺 全体表示にもどす</button>
+      <button type="button" class="fit-btn" id="bigBtn">🔍 大きな地図で見る</button>
+    </div>
+    <!-- 地図を広げたときに、方位と距離を地図の上に大きく浮かべる -->
+    <div class="mapbox">
+      <div class="map-badge" id="mapBadge">
+        <div class="mb-lead" id="mbLead">おうちから見て</div>
+        <div class="mb-dir" id="mbDir">──</div>
+        <div class="mb-dist" id="mbDist"></div>
+      </div>
+      <div id="map"></div>
+    </div>
+    <div class="map-under">
+      <button type="button" class="fit-btn" id="lockBtn">🔓 地図を動かす</button>
+    </div>
+    <div class="map-note" id="mapNote">
+      地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>
+      1本で動かしたいときは「地図を動かす」を押してください。
+    </div>
+    </div>
+  </div>
+
+  <div class="outro">
+    この方位の<b>とびらがひらく日・時間</b>は、メンバーシップの<br>
+    「<a href="https://note.com/youyou55/membership">今週の扉</a>」「<a href="https://note.com/youyou55/membership">先読みの扉</a>」でご案内しています。
+  </div>
+
+  <footer>
+    方位は真北基準・8方位（45度）で判定しています。<br>
+    入力した郵便番号・住所がこちらに保存されることはありません。<br>
+    おうち欄の記憶は、あなたのスマホ（ブラウザ）の中だけに保存されます。<br>
+    （場所しらべには国土地理院などの公的な無料サービスを利用しています）<br>
+    © <a href="https://note.com/youyou55">ゆうきの扉</a>
+  </footer>
+</div>
+
+<!-- Googleマップ。キーはページに埋め込む前提の公開キーで、守りはGoogle Cloud側のリファラー制限が担う -->
+<script>
+  // 地図が使えるかどうかを1つの約束（Promise）で表す。true=使える／false=使えない
+  // ⚠圏外・通信不良・広告ブロッカー等で読み込みに失敗しても、方位と距離は必ず出す（待ち続けない）
+  let __gmapsResolve, __gmapsSettled = false;
+  const gmapsLoaded = new Promise(r => { __gmapsResolve = r; });
+  function gmapsDone(ok) {
+    if (__gmapsSettled) return;
+    __gmapsSettled = true;
+    __gmapsResolve(ok);
+  }
+  window.gmapsReady = () => gmapsDone(true);
+  window.gmapsFail = () => gmapsDone(false);
+
+  // 地図の鍵は2本。テスト用に切り替えると、Google側の指標で本番と分けて数えられる
+  // ⚠どちらもページに埋め込む前提の公開キー。守りはリファラー制限（aoiyouki55.github.io のみ）が担う
+  const GMAPS_KEY_HONBAN = "AIzaSyCPBHWYtOTiSWEGvNXmslHqJvx83pqINhE";
+  const GMAPS_KEY_TEST   = "AIzaSyCo6AluEfxHCLyuTaOXDlkrXhAaBBPugKQ";
+  // この確認用ページは常にテスト用の鍵を使う（本番の記録に数えない）【2026/11/11 安達さん】
+  const IS_TEST = true;
+  // 読み込み後の認証エラー（キーの制限・課金設定など）。灰色のエラー枠を出さず、案内文に差し替える
+  window.gm_authFailure = () => {
+    gmapsDone(false);
+    if (typeof showMapUnavailable === "function") showMapUnavailable();
+  };
+  // 8秒たっても読み込めなければ、地図はあきらめて先へ進む
+  setTimeout(() => { if (!(window.google && window.google.maps)) gmapsDone(false); }, 8000);
+
+  // 選んだ鍵で地図を読み込む
+  (function () {
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://maps.googleapis.com/maps/api/js?key=" + (IS_TEST ? GMAPS_KEY_TEST : GMAPS_KEY_HONBAN)
+          + "&language=ja&region=JP&loading=async&callback=gmapsReady";
+    s.onerror = () => gmapsDone(false);
+    document.head.appendChild(s);
+  })();
+</script>
+<!-- 市町村コード表（国土地理院公式・自治体合併で内容が更新されるためSRI固定はしない。GSI名前空間が先に必要） -->
+<script>window.GSI = window.GSI || {};</script>
+<script src="https://maps.gsi.go.jp/js/muni.js" defer></script>
+<script>
+const DIRS = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
+const DISTS = [ { label: "近距離", km: 5 }, { label: "中距離", km: 20 }, { label: "長距離", km: 50 } ];
+const RINGS = [5, 20, 50]; // 地図に描く距離の目安の円（km）
+const R_EARTH = 6371.0088; // km
+const toRad = d => d * Math.PI / 180;
+const toDeg = r => r * 180 / Math.PI;
+
+function bearing(lat1, lon1, lat2, lon2) {
+  const p1 = toRad(lat1), p2 = toRad(lat2), dl = toRad(lon2 - lon1);
+  const y = Math.sin(dl) * Math.cos(p2);
+  const x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const p1 = toRad(lat1), p2 = toRad(lat2);
+  const dp = toRad(lat2 - lat1), dl = toRad(lon2 - lon1);
+  const a = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+  return R_EARTH * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// 出発点から方位角θ・距離dkmの地点（球面三角法）
+function destPoint(lat, lon, brgDeg, dkm) {
+  const δ = dkm / R_EARTH, θ = toRad(brgDeg);
+  const p1 = toRad(lat), l1 = toRad(lon);
+  const p2 = Math.asin(Math.sin(p1)*Math.cos(δ) + Math.cos(p1)*Math.sin(δ)*Math.cos(θ));
+  const l2 = l1 + Math.atan2(Math.sin(θ)*Math.sin(δ)*Math.cos(p1), Math.cos(δ) - Math.sin(p1)*Math.sin(p2));
+  return [toDeg(p2), toDeg(l2)];
+}
+function dirIndex(brg) { return Math.floor(((brg + 22.5) % 360) / 45); }
+function distToBoundary(brg) {
+  const m = ((brg + 22.5) % 45);
+  return Math.min(m, 45 - m); // 境界までの角度差
+}
+
+// 郵便番号 → 住所（zipcloud・JSONP）
+function zipLookup(zip) {
+  return new Promise((resolve, reject) => {
+    const cb = "zipcb_" + Math.random().toString(36).slice(2);
+    window[cb] = data => {
+      delete window[cb]; script.remove();
+      if (data.status !== 200 || !data.results) reject(new Error("郵便番号が見つかりませんでした: " + zip));
+      else resolve(data.results[0]);
+    };
+    const script = document.createElement("script");
+    script.src = "https://zipcloud.ibsnet.co.jp/api/search?zipcode=" + encodeURIComponent(zip) + "&callback=" + cb;
+    script.onerror = () => { delete window[cb]; script.remove(); reject(new Error("郵便番号の検索に失敗しました")); };
+    document.body.appendChild(script);
+  });
+}
+// 住所 → 緯度経度の候補一覧（国土地理院）
+async function geocodeList(addr) {
+  const res = await fetch("https://msearch.gsi.go.jp/address-search/AddressSearch?q=" + encodeURIComponent(addr));
+  if (!res.ok) throw new Error("住所の検索に失敗しました");
+  return await res.json();
+}
+async function geocode(addr) {
+  const list = await geocodeList(addr);
+  if (!list.length) throw new Error("住所が見つかりませんでした: " + addr);
+  const [lon, lat] = list[0].geometry.coordinates;
+  return { lat, lon, title: list[0].properties.title };
+}
+// 緯度経度 → おおよその地名（国土地理院の逆引き＋市町村コード表）
+async function reverseGeocode(lat, lon) {
+  const res = await fetch("https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress?lat=" + lat + "&lon=" + lon);
+  if (!res.ok) return "";
+  const j = await res.json();
+  const r = j && j.results;
+  if (!r) return "";
+  let muni = "";
+  if (window.GSI && GSI.MUNI_ARRAY && r.muniCd) {
+    const e = GSI.MUNI_ARRAY[String(parseInt(r.muniCd, 10))];
+    if (e) { const parts = e.split(","); muni = parts[1] + parts[3]; }
+  }
+  const lv = (r.lv01Nm && r.lv01Nm !== "－") ? r.lv01Nm : "";
+  return muni + lv;
+}
+
+// 住所・地名欄の候補選択（選ばれたらここに保存）
+const addrPick = { home: null, dest: null };
+
+async function resolvePoint(key, zip, addrText) {
+  if (addrText && addrText.trim()) {
+    const picked = addrPick[key];
+    if (picked && picked.input === addrText.trim()) {
+      return { lat: picked.lat, lon: picked.lon, label: picked.title };
+    }
+    const g = await geocode(addrText.trim());
+    return { lat: g.lat, lon: g.lon, label: g.title + "（検索: " + addrText.trim() + "）" };
+  }
+  const z = zip.replace(/[^0-9]/g, "");
+  if (!/^\d{7}$/.test(z)) throw new Error("郵便番号は7桁の数字で入れてください（例: 100-0005）。地名で調べたいときは「住所・地名」欄へどうぞ");
+  const a = await zipLookup(z);
+  const full = a.address1 + a.address2 + a.address3;
+  const g = await geocode(full);
+  return { lat: g.lat, lon: g.lon, label: full };
+}
+
+let map = null, overlays = [], homeMarker = null, destMarker = null;
+let state = null; // { mode, home:{lat,lon,label,moved}, dest:{...} }
+let currentMode = "houi"; // "houi" | "dest"（方位から調べるが上位・既定【2026/8/6 安達さん】）
+let chosenDirIdx = null, chosenDistKm = DISTS[0].km;
+
+const LL = (lat, lon) => ({ lat: lat, lng: lon });
+function dotIcon(color) {
+  return { path: google.maps.SymbolPath.CIRCLE, scale: 9,
+    fillColor: "#ffffff", fillOpacity: 1, strokeColor: color, strokeWeight: 4 };
+}
+function clearOverlays() { overlays.forEach(o => o.setMap(null)); overlays = []; }
+
+function updateResultCard() {
+  const { home, dest } = state;
+  const brg = bearing(home.lat, home.lon, dest.lat, dest.lon);
+  const dist = distanceKm(home.lat, home.lon, dest.lat, dest.lon);
+  document.getElementById("leadText").textContent =
+    state.mode === "houi" ? "お出かけ先の目安は、おうちから見て" : "目的地は、おうちから見て";
+  const dirLabel = DIRS[dirIndex(brg)];
+  const distLabel = "距離 約" + (dist < 10 ? dist.toFixed(1) : Math.round(dist)) + "km";
+  document.getElementById("dirName").textContent = dirLabel;
+  document.getElementById("distText").textContent = distLabel;
+  // 地図の中に浮かべるパネルにも同じ内容を反映（丸を動かすたびに更新される）
+  document.getElementById("mbLead").textContent =
+    state.mode === "houi" ? "お出かけ先の目安" : "おうちから見て";
+  document.getElementById("mbDir").textContent = dirLabel;
+  document.getElementById("mbDist").textContent = distLabel;
+  const fmt = p => p.moved ? ((p.dragLabel || p.label) + "（地図で調整）") : p.label;
+  document.getElementById("routeText").innerHTML = "🏠 " + fmt(home) + "<br>↓<br>📍 " + fmt(dest);
+  document.getElementById("boundaryNote").style.display =
+    (state.mode !== "houi" && distToBoundary(brg) < 3) ? "block" : "none";
+  return { brg, dist };
+}
+
+function redrawLines(fit) {
+  const { home, dest } = state;
+  const { brg, dist } = updateResultCard();
+  if (!map) return;
+  clearOverlays();
+
+  const R = Math.min(Math.max(dist * 1.4, 60), 2500);
+  const idx = dirIndex(brg);
+
+  // 8方位の境界線（geodesic=球面上の正方位線）。該当方位の両端だけ金色の実線、他は緑の破線
+  for (let i = 0; i < 8; i++) {
+    const b = 22.5 + i * 45;
+    const isEdge = (i === idx) || (i === (idx + 7) % 8);
+    const end = destPoint(home.lat, home.lon, b, R);
+    const path = [LL(home.lat, home.lon), LL(end[0], end[1])];
+    overlays.push(new google.maps.Polyline(isEdge
+      ? { path, geodesic: true, map, clickable: false,
+          strokeColor: "#b8860b", strokeOpacity: 0.95, strokeWeight: 3.5 }
+      : { path, geodesic: true, map, clickable: false, strokeOpacity: 0,
+          icons: [{ icon: { path: "M 0,-1 0,1", strokeColor: "#1f4a24", strokeOpacity: 0.95,
+                            strokeWeight: 2.6, scale: 3 }, offset: "0", repeat: "12px" }] }
+    ));
+  }
+
+  // 距離の目安の細い円（5・20・50km）
+  RINGS.forEach(km => {
+    overlays.push(new google.maps.Circle({
+      center: LL(home.lat, home.lon), radius: km * 1000, map, clickable: false,
+      strokeColor: "#1f4a24", strokeOpacity: 0.6, strokeWeight: 1.2, fillOpacity: 0
+    }));
+    const p = destPoint(home.lat, home.lon, 0, km);
+    overlays.push(new google.maps.Marker({
+      position: LL(p[0], p[1]), map, clickable: false,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 0, strokeOpacity: 0, fillOpacity: 0 },
+      label: { text: km + "km", fontSize: "11px", fontWeight: "700", color: "#1f4a24" }
+    }));
+  });
+
+  // 自宅→目的地の線
+  overlays.push(new google.maps.Polyline({
+    path: [LL(home.lat, home.lon), LL(dest.lat, dest.lon)], geodesic: true, map, clickable: false,
+    strokeColor: "#e05a3a", strokeOpacity: 0.95, strokeWeight: 3.5
+  }));
+
+  if (fit) fitWhole();
+}
+
+function fitWhole() {
+  if (!map || !state) return;
+  const b = new google.maps.LatLngBounds();
+  b.extend(LL(state.home.lat, state.home.lon));
+  b.extend(LL(state.dest.lat, state.dest.lon));
+  map.fitBounds(b, 60);
+}
+
+// 地図のスクロール対策: 既定は「固定」。1本指ではページが動き、指2本で地図を動かせる（Googleマップ方式）
+// ボタンを押すと1本指でも地図を動かせる。⚠丸（おうち・目的地）のドラッグは固定中でも使える
+let mapLocked = true;
+function applyMapLock() {
+  const btn = document.getElementById("lockBtn");
+  const note = document.getElementById("mapNote");
+  // cooperative = 指1本でページが動き、指2本で地図が動く（Googleマップ標準の動き）
+  if (map) map.setOptions({ gestureHandling: mapLocked ? "cooperative" : "greedy" });
+  btn.textContent = mapLocked ? "🔓 地図を動かす" : "🔒 地図をとめる";
+  btn.classList.toggle("on", !mapLocked);
+  note.innerHTML = mapLocked
+    ? '地図は<b>指2本</b>で動かせます（1本ならページが動きます）。<br>1本で動かしたいときは「地図を動かす」を押してください。'
+    : '<b>いま地図を動かせます。</b>ページを動かしたいときは「地図をとめる」を押してください。';
+}
+
+// 「大きな地図で見る」= 同じページのまま画面いっぱいに広げる（別ページは開かない）
+let mapExpanded = false;
+function toggleExpand(force) {
+  mapExpanded = (typeof force === "boolean") ? force : !mapExpanded;
+  document.querySelector(".mapwrap").classList.toggle("expanded", mapExpanded);
+  document.getElementById("mapBadge").classList.toggle("show", mapExpanded);
+  document.body.style.overflow = mapExpanded ? "hidden" : "";
+  const b = document.getElementById("bigBtn");
+  b.textContent = mapExpanded ? "✕ 地図を閉じる" : "🔍 大きな地図で見る";
+  b.classList.toggle("on", mapExpanded);
+  // 広げた直後に、出発地点と目的地が収まるように描き直す
+  setTimeout(() => { if (map && state) fitWhole(); }, 150);
+}
+
+async function afterDrag(key, marker) {
+  const p = marker.getPosition();
+  const s = state[key];
+  s.lat = p.lat(); s.lon = p.lng(); s.moved = true; s.dragLabel = null;
+  redrawLines(false);
+  const my = s.rgSeq = (s.rgSeq || 0) + 1;
+  try {
+    const name = await reverseGeocode(s.lat, s.lon);
+    if (state[key] === s && s.rgSeq === my && name) { s.dragLabel = name; updateResultCard(); }
+  } catch (e) { /* 逆引きできないときは（地図で調整）のまま */ }
+}
+
+// 地図が使えないときは、地図まわりだけ隠して先へ進む（方位と距離はそのまま使える）
+function showMapUnavailable() {
+  const hide = sel => { const el = document.querySelector(sel); if (el) el.style.display = "none"; };
+  hide(".map-tools"); hide(".mapbox"); hide(".map-under");
+  const note = document.getElementById("mapNote");
+  if (note) note.innerHTML = "⚠ 地図をうまく読み込めませんでした。<br>方位と距離はそのままお使いいただけます。電波のよい場所で開き直すと、地図も出ます。";
+}
+
+async function drawMap() {
+  await gmapsLoaded; // 待つのはここまで。時間切れでも先へ進む
+  // 実際に使えるかは、旗ではなく本体の有無で判断する（時間切れ後に間に合った場合も拾える）
+  if (!(window.google && window.google.maps)) { showMapUnavailable(); return; }
+  if (!map) {
+    // 地図の配色は今のところGoogle標準（お店・観光地が出るのが目的のため）
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: LL(state.home.lat, state.home.lon), zoom: 11,
+      gestureHandling: "cooperative", clickableIcons: true,
+      mapTypeControl: false, streetViewControl: false, fullscreenControl: false, zoomControl: true
+    });
+    homeMarker = new google.maps.Marker({ map, draggable: true, zIndex: 1000,
+      title: "🏠 おうち（ドラッグで動かせます）", icon: dotIcon("#2e5d33") });
+    destMarker = new google.maps.Marker({ map, draggable: true, zIndex: 1000,
+      title: "📍 目的地（ドラッグで動かせます）", icon: dotIcon("#a9412f") });
+    homeMarker.addListener("dragend", () => afterDrag("home", homeMarker));
+    destMarker.addListener("dragend", () => afterDrag("dest", destMarker));
+    applyMapLock();
+  }
+  homeMarker.setPosition(LL(state.home.lat, state.home.lon));
+  destMarker.setPosition(LL(state.dest.lat, state.dest.lon));
+  redrawLines(true);
+}
+
+async function run() {
+  const err = document.getElementById("errBox");
+  const btn = document.getElementById("goBtn");
+  err.style.display = "none";
+  btn.disabled = true; btn.textContent = "調べています…";
+  try {
+    const homeZip = document.getElementById("homeZip").value;
+    const homeAddr = document.getElementById("homeAddr").value;
+    if (!homeZip.trim() && !homeAddr.trim()) throw new Error("おうちの郵便番号か住所を入れてください");
+    const home = await resolvePoint("home", homeZip, homeAddr);
+
+    let dest;
+    if (currentMode === "houi") {
+      if (chosenDirIdx === null) throw new Error("方位を選んでください");
+      const [dlat, dlon] = destPoint(home.lat, home.lon, chosenDirIdx * 45, chosenDistKm);
+      let areaName = "";
+      try { areaName = await reverseGeocode(dlat, dlon); } catch (e) {}
+      dest = {
+        lat: dlat, lon: dlon,
+        label: (areaName ? areaName + " のあたり" : DIRS[chosenDirIdx] + "へ約" + chosenDistKm + "km の地点")
+               + "（このへんで行き先を探してみましょう）"
+      };
+    } else {
+      const destZip = document.getElementById("destZip").value;
+      const destAddr = document.getElementById("destAddr").value;
+      if (!destZip.trim() && !destAddr.trim()) throw new Error("目的地の郵便番号か住所を入れてください");
+      dest = await resolvePoint("dest", destZip, destAddr);
+      const dist = distanceKm(home.lat, home.lon, dest.lat, dest.lon);
+      if (dist < 0.3) throw new Error("おうちと目的地がほぼ同じ場所です。入力を確かめてください");
+    }
+
+    state = { mode: currentMode, home: { ...home, moved: false }, dest: { ...dest, moved: false } };
+    document.getElementById("result").classList.add("show");
+    // 先に方位と距離を出す。地図の読み込みを待たないので、地図が遅くても・出なくても結果は必ず見える
+    updateResultCard();
+    localStorage.setItem("yuki_home_zip", homeZip);
+    localStorage.setItem("yuki_home_addr", homeAddr);
+    document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+    drawMap();
+  } catch (e) {
+    err.textContent = "⚠ " + e.message;
+    err.style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = "とびらをひらく";
+  }
+}
+
+// 郵便番号: 7桁そろったら下に住所を表示
+function setupZipEcho(zipId, echoId) {
+  const inp = document.getElementById(zipId), echo = document.getElementById(echoId);
+  let seq = 0;
+  inp.addEventListener("input", async () => {
+    const my = ++seq;
+    const z = inp.value.replace(/[^0-9]/g, "");
+    if (z.length !== 7) { echo.textContent = ""; return; }
+    echo.textContent = "…調べています";
+    try {
+      const a = await zipLookup(z);
+      if (my === seq) echo.textContent = "→ " + a.address1 + a.address2 + a.address3;
+    } catch (e) {
+      if (my === seq) echo.textContent = "→ この郵便番号は見つかりませんでした";
+    }
+  });
+}
+// 住所・地名: 入力すると候補を表示して選べる
+function setupAddrCandidates(addrId, listId, key) {
+  const inp = document.getElementById(addrId), list = document.getElementById(listId);
+  let timer = null;
+  inp.addEventListener("input", () => {
+    addrPick[key] = null;
+    clearTimeout(timer);
+    const q = inp.value.trim();
+    if (q.length < 2) { list.style.display = "none"; list.innerHTML = ""; return; }
+    timer = setTimeout(async () => {
+      try {
+        const arr = await geocodeList(q);
+        list.innerHTML = "";
+        arr.slice(0, 8).forEach(c => {
+          const li = document.createElement("li");
+          li.textContent = c.properties.title;
+          li.addEventListener("click", () => {
+            const [lon, lat] = c.geometry.coordinates;
+            inp.value = c.properties.title;
+            addrPick[key] = { lat, lon, title: c.properties.title, input: c.properties.title };
+            list.style.display = "none"; list.innerHTML = "";
+          });
+          list.appendChild(li);
+        });
+        list.style.display = arr.length ? "block" : "none";
+      } catch (e) { /* 候補が出せないだけなので黙って続行 */ }
+    }, 400);
+  });
+  inp.addEventListener("blur", () => setTimeout(() => { list.style.display = "none"; }, 250));
+}
+
+// モード切り替えと選択ボタン
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById("tabDest").classList.toggle("active", mode === "dest");
+  document.getElementById("tabHoui").classList.toggle("active", mode === "houi");
+  document.getElementById("destBlock").style.display = mode === "dest" ? "block" : "none";
+  document.getElementById("houiBlock").style.display = mode === "houi" ? "block" : "none";
+}
+function buildChoices() {
+  const dirGrid = document.getElementById("dirGrid");
+  DIRS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "choice"; b.textContent = d;
+    b.addEventListener("click", () => {
+      chosenDirIdx = i;
+      dirGrid.querySelectorAll(".choice").forEach((x, j) => x.classList.toggle("active", j === i));
+    });
+    dirGrid.appendChild(b);
+  });
+  const distGrid = document.getElementById("distGrid");
+  DISTS.forEach((d, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "choice" + (i === 0 ? " active" : "");
+    b.innerHTML = d.label + "<small>約" + d.km + "km</small>";
+    b.addEventListener("click", () => {
+      chosenDistKm = d.km;
+      distGrid.querySelectorAll(".choice").forEach((x, j) => x.classList.toggle("active", j === i));
+    });
+    distGrid.appendChild(b);
+  });
+}
+
+document.getElementById("goBtn").addEventListener("click", run);
+document.getElementById("fitBtn").addEventListener("click", fitWhole);
+document.getElementById("lockBtn").addEventListener("click", () => { mapLocked = !mapLocked; applyMapLock(); });
+document.getElementById("bigBtn").addEventListener("click", () => toggleExpand());
+document.addEventListener("keydown", e => { if (e.key === "Escape" && mapExpanded) toggleExpand(false); });
+document.getElementById("tabDest").addEventListener("click", () => setMode("dest"));
+document.getElementById("tabHoui").addEventListener("click", () => setMode("houi"));
+
+window.addEventListener("DOMContentLoaded", () => {
+  if (typeof IS_TEST !== "undefined" && IS_TEST) document.getElementById("testFlag").classList.add("show");
+  buildChoices();
+  setupZipEcho("homeZip", "homeZipEcho");
+  setupZipEcho("destZip", "destZipEcho");
+  setupAddrCandidates("homeAddr", "homeAddrList", "home");
+  setupAddrCandidates("destAddr", "destAddrList", "dest");
+  const z = localStorage.getItem("yuki_home_zip");
+  const a = localStorage.getItem("yuki_home_addr");
+  if (z) { document.getElementById("homeZip").value = z; document.getElementById("homeZip").dispatchEvent(new Event("input")); }
+  if (a) document.getElementById("homeAddr").value = a;
+});
+</script>
+
+<script src="data/yuki-2026-11.js"></script>
+<script src="data/yuki-2026-12.js"></script>
+<script src="data/yuki-2027-01.js"></script>
+<script src="data/yuki-2027-02.js"></script>
+<script>
+/* ▼▼ 本命機能「開運方位を探す」元データ読み込み版（2026/11/11 SP占いアプリ設計01） ▼▼
+   データ（data/yuki-*.js）は「答え」だけ。生成はエンジン/build_app_data_tokoro.py */
+(function () {
+  const DIRS = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
+  const MON_TITLE = {
+    "開": "💼 開門：仕事・開業・ものごとを始めるのに良い門",
+    "生": "💰️ 生門：金運・商売・健康など、活動することが良い門",
+    "休": "💖 休門：恋愛・相談・休息など、動かず待つほうが良い門"
+  };
+  const KEIMON_TEXT = "景門は、試験や学問・発表・お祝いごとに良い門です";
+  const YOBI = ["日", "月", "火", "水", "木", "金", "土"];
+  const RAD_OCT = 28, RAD_CLK = 25;   // 記号を置く半径（%）。見た目の調整はここ
+
+  const now = new Date();
+  const state = { date: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+                  hour: 12, dir: 0, month: null, theme: "開" };
+  state.month = ym(state.date);
+
+  function ym(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
+  function iso(d) { return ym(d) + "-" + String(d.getDate()).padStart(2, "0"); }
+  function dayData(d) { const m = (window.YUKI || {})[ym(d)]; return m ? m.days[String(d.getDate()).padStart(2, "0")] : null; }
+  function dateLabel(d) { return d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日（" + YOBI[d.getDay()] + "）"; }
+  function pos(deg, rad) {
+    const t = deg * Math.PI / 180;
+    return "left:" + (50 + rad * Math.sin(t)).toFixed(1) + "%;top:" + (50 - rad * Math.cos(t)).toFixed(1) + "%";
+  }
+  function circled(n) { return n <= 20 ? String.fromCharCode(0x2460 + n - 1) : n + "."; }
+  function sym(mark, deg, rad, small) {
+    const el = document.createElement("div");
+    el.className = "yk-sym" + (small ? " sm" : "");
+    el.style.cssText = pos(deg, rad);
+    el.textContent = mark;
+    return el;
+  }
+
+  /* 番号つきの文章。unit="方位"（日付から）/"時間"（方位から）。info={b1,b2,w} */
+  function goodLine(head, unit, nth, code, targetFmt) {
+    const [target, door, q] = code.split("|");
+    let t = head + nth + "良い" + unit + "は、" + targetFmt(target) + "の" + door + "門です";
+    if (door === "景") t += "。" + KEIMON_TEXT;
+    if (q === "g") t += "。🌕大開運（最大吉）です";
+    return t;
+  }
+  function buildNotes(head, unit, info, targetFmt, noneText) {
+    const lines = [];
+    if (info.b1) {
+      lines.push(goodLine(head, unit, "一番", info.b1, targetFmt));
+      if (info.b2) lines.push(goodLine(head, unit, "二番目に", info.b2, targetFmt));
+    } else {
+      lines.push(noneText);
+    }
+    const w = info.w.split("|");
+    if (w[1] === "e" || w[1] === "x") {
+      let t = head + "一番悪い" + unit + "は、" + targetFmt(w[0]) + "です";
+      if (w[1] === "e" && w[2] === "d") t += "。時間変更や方違え（吉方位へ寄り道など）をおすすめします";
+      lines.push(t);
+    }
+    return lines;
+  }
+  /* 時刻の列挙: 1つ「14時」/2つ「14時と18時」/3つ以上「8時・14時・18時」 */
+  function timeList(arr) {
+    const s = arr.map(t => t + "時");
+    return s.length === 1 ? s[0] : (s.length === 2 ? s[0] + "と" + s[1] : s.join("・"));
+  }
+
+  /* --- 日付から探す --- */
+  function renderDate() {
+    document.getElementById("ykDateLabel").textContent = dateLabel(state.date);
+    document.getElementById("ykDatePick").value = iso(state.date);
+    document.getElementById("ykTimeLabel").textContent = state.hour + "時";
+    const box = document.getElementById("ykSymsDate");
+    const notes = document.getElementById("ykNotesDate");
+    box.innerHTML = ""; notes.innerHTML = "";
+    const data = dayData(state.date);
+    if (!data) { notes.innerHTML = '<div class="yk-na">この日の分は準備中です</div>'; return; }
+    const slot = data.s.find(s => s[0] === state.hour);
+    if (!slot) return;
+    DIRS.forEach((d, i) => box.appendChild(sym([...slot[1]][i], i * 45, RAD_OCT)));
+    const ann = [];
+    if ((data.gf || []).indexOf(state.hour) >= 0) ann.push("この時間は、五不遇時です。効果が弱まるとされます");
+    if (slot[2].ak) ann.push("この時間の" + slot[2].ak + "は暗剣殺です。突発的なことが起こりやすいです");
+    const lines = buildNotes("この時間の", "方位", slot[2], t => t, "この時間に良い方位はありません");
+    if (state.hour === 0) lines.push("0時ごろは日をまたぐため、お出かけにはおすすめしていません");
+    notes.innerHTML = ann.map(t => "※　" + t).concat(lines.map((t, i) => circled(i + 1) + "　" + t)).join("<br>");
+  }
+
+  /* --- 方位から探す --- */
+  function renderDir() {
+    document.getElementById("ykDateLabel2").textContent = dateLabel(state.date);
+    document.getElementById("ykDatePick2").value = iso(state.date);
+    document.getElementById("ykDirLabel").textContent = DIRS[state.dir];
+    const box = document.getElementById("ykSymsDir");
+    const notes = document.getElementById("ykNotesDir");
+    box.innerHTML = ""; notes.innerHTML = "";
+    const data = dayData(state.date);
+    if (!data) { notes.innerHTML = '<div class="yk-na">この日の分は準備中です</div>'; return; }
+    data.s.forEach(s => {
+      const mk = [...s[1]][state.dir];
+      if (s[0] === 0) {
+        box.appendChild(sym(mk, -7, RAD_CLK, true));          // 左=当日の夜（23時〜）の枠
+      } else {
+        box.appendChild(sym(mk, s[0] * 15, RAD_CLK));
+      }
+    });
+    const prev = new Date(state.date); prev.setDate(prev.getDate() - 1);
+    const pd = dayData(prev);
+    if (pd) {
+      const ps = pd.s.find(s => s[0] === 0);
+      if (ps) box.appendChild(sym([...ps[1]][state.dir], 7, RAD_CLK, true));   // 右=日付が変わった直後（〜1時）の枠
+    }
+    const rec = data.dr[DIRS[state.dir]];
+    const ann = [];
+    if ((data.gf || []).length) ann.push("この日の" + timeList(data.gf) + "は、五不遇時です。効果が弱まるとされます");
+    if (rec.ak && rec.ak.length) ann.push("この方位の" + timeList(rec.ak) + "は暗剣殺です。突発的なことが起こりやすいです");
+    const lines = buildNotes("この方位の", "時間", rec, t => t + "時", "この方位に良い時間はありません");
+    notes.innerHTML = ann.map(t => "※　" + t).concat(lines.map((t, i) => circled(i + 1) + "　" + t)).join("<br>");
+  }
+
+  /* --- 運気から探す --- */
+  function renderLuck() {
+    const [y, m] = state.month.split("-").map(Number);
+    document.getElementById("ykMonLabel").textContent = y + "年" + m + "月";
+    const sel = document.getElementById("ykMonSel");
+    if (sel.value !== state.month && [...sel.options].some(o => o.value === state.month)) sel.value = state.month;
+    document.getElementById("ykRankTitle").textContent = MON_TITLE[state.theme];
+    const listEl = document.getElementById("ykRankList");
+    const mon = (window.YUKI || {})[state.month];
+    if (!mon) { listEl.innerHTML = '<div class="yk-na">この月の分は準備中です</div>'; return; }
+    const rows = mon.rank[state.theme].slice(0, 10).map(([day, h, dir, g], i) => {
+      const d = new Date(y, m - 1, day);
+      return circled(i + 1) + "　" + m + "月" + day + "日（" + YOBI[d.getDay()] + "）　" +
+             h + "時ごろ出発で　" + dir + "へ" + (g ? "　🌕最大吉" : "");
+    });
+    listEl.innerHTML = rows.join("<br>");
+  }
+
+  /* --- 切り替えと操作 --- */
+  const views = { ykTabDate: "ykViewDate", ykTabDir: "ykViewDir", ykTabLuck: "ykViewLuck" };
+  Object.keys(views).forEach(id => {
+    document.getElementById(id).addEventListener("click", () => {
+      Object.keys(views).forEach(k => {
+        document.getElementById(k).classList.toggle("active", k === id);
+        document.getElementById(views[k]).style.display = k === id ? "" : "none";
+      });
+      renderAll();
+    });
+  });
+  function shiftDay(n) { state.date.setDate(state.date.getDate() + n); state.month = ym(state.date); renderAll(); }
+  document.getElementById("ykPrevDay").addEventListener("click", () => shiftDay(-1));
+  document.getElementById("ykNextDay").addEventListener("click", () => shiftDay(1));
+  document.getElementById("ykPrevDay2").addEventListener("click", () => shiftDay(-1));
+  document.getElementById("ykNextDay2").addEventListener("click", () => shiftDay(1));
+  ["ykDatePick", "ykDatePick2"].forEach(id => {
+    document.getElementById(id).addEventListener("change", e => {
+      if (!e.target.value) return;
+      const [y, m, d] = e.target.value.split("-").map(Number);
+      state.date = new Date(y, m - 1, d); state.month = ym(state.date); renderAll();
+    });
+  });
+  document.getElementById("ykTimeUp").addEventListener("click", () => { state.hour = (state.hour + 22) % 24; renderDate(); });  // ▲=前の時間
+  document.getElementById("ykTimeDown").addEventListener("click", () => { state.hour = (state.hour + 2) % 24; renderDate(); });  // ▼=次の時間
+  document.getElementById("ykDirPrev").addEventListener("click", () => { state.dir = (state.dir + 7) % 8; renderDir(); });
+  document.getElementById("ykDirNext").addEventListener("click", () => { state.dir = (state.dir + 1) % 8; renderDir(); });
+  function shiftMonth(n) {
+    const [y, m] = state.month.split("-").map(Number);
+    state.month = ym(new Date(y, m - 1 + n, 1)); renderLuck();
+  }
+  document.getElementById("ykPrevMon").addEventListener("click", () => shiftMonth(-1));
+  document.getElementById("ykNextMon").addEventListener("click", () => shiftMonth(1));
+  const sel = document.getElementById("ykMonSel");
+  Object.keys(window.YUKI || {}).sort().forEach(k => {
+    const [y, m] = k.split("-").map(Number);
+    const o = document.createElement("option");
+    o.value = k; o.textContent = y + "年" + m + "月";
+    sel.appendChild(o);
+  });
+  sel.addEventListener("change", () => { state.month = sel.value; renderLuck(); });
+  document.querySelectorAll("[data-yktheme]").forEach(b => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll("[data-yktheme]").forEach(x => x.classList.toggle("active", x === b));
+      state.theme = b.dataset.yktheme; renderLuck();
+    });
+  });
+
+  function renderAll() { renderDate(); renderDir(); renderLuck(); }
+  renderAll();
+})();
+/* ▲▲ 本命機能ここまで ▲▲ */
+</script>
+
+</body>
+</html>
